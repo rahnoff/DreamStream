@@ -13,7 +13,7 @@ import (
 
 
 const (
-	GetVideoByIDQuery string = "SELECT id, description, storage_link, title FROM video WHERE id = ?"
+	GetVideoByIdQuery string = "SELECT id, description, storage_link, title FROM video WHERE id = ?"
 
 	CreateVideoQuery  string = "INSERT INTO video (id, description, storage_link, title) VALUES (?, ?, ?, ?)"
 )
@@ -26,14 +26,65 @@ var (
 )
 
 
-type RestErr struct {
-	ErrMessage string        `json:"message"`
-
-	ErrStatus  int           `json:"status"`
-
-	ErrError   string        `json:"error"`
+type (
+	RestErr struct {
+		ErrMessage string        `json:"message"`
 	
-	ErrCauses  []interface{} `json:"causes"`
+		ErrStatus  int           `json:"status"`
+	
+		ErrError   string        `json:"error"`
+		
+		ErrCauses  []interface{} `json:"causes"`
+	}
+
+	DbRepository interface {
+		GetByID(videoID string) (*Video, *RestErr)
+	
+		Create(video Video) (*Video, *RestErr)
+	}
+
+	dbRepository struct {}
+
+	Video struct {
+		ID           string `json:"id"`
+	
+		Description  string `json:"description"`
+	
+		StorageLink  string `json:"storage_link"`
+	
+		Title        string `json:"title"`
+	}
+
+	VideoRepository interface {
+		GetByID(videoID string) (*Video, *RestErr)
+	
+		Create(video Video) (*Video, *RestErr)
+	}
+
+	VideoService interface {
+		GetByID(videoID string) (*Video, *RestErr)
+	
+		Create(video Video) (*Video, *RestErr)
+	}
+
+	videoService struct {
+		repository VideoRepository
+	}
+
+	VideoHandler interface {
+		GetById(ctx *gin.Context)
+	
+		Create(ctx *gin.Context)
+	}
+	
+	videoHandler struct {
+		videoService VideoService
+	}
+)
+
+
+func main() {
+	Run()
 }
 
 
@@ -118,16 +169,6 @@ func NewDbRepository() DbRepository {
 }
 
 
-type DbRepository interface {
-	GetByID(videoID string) (*Video, *RestErr)
-
-	Create(video Video) (*Video, *RestErr)
-}
-
-
-type dbRepository struct {}
-
-
 func (repo *dbRepository) Create(video Video) (*Video, *RestErr) {
 	err := GetSession().Query(CreateVideoQuery, video.ID, video.Description, video.StorageLink, video.Title).Exec()
 
@@ -158,42 +199,12 @@ func (repo *dbRepository) GetByID(videoID string) (*Video, *RestErr) {
 }
 
 
-type Video struct {
-	ID           string `json:"id"`
-
-	Description  string `json:"description"`
-
-	StorageLink  string `json:"storage_link"`
-
-	Title        string `json:"title"`
-}
-
-
 func (video *Video) ValidateVideo() *RestErr {
 	if (video.Title == "") {
 		return NewInternalServerError("Title can't be blank", nil)
 	}
 
 	return nil
-}
-
-
-type VideoRepository interface {
-	GetByID(videoID string) (*Video, *RestErr)
-
-	Create(video Video) (*Video, *RestErr)
-}
-
-
-type VideoService interface {
-	GetByID(videoID string) (*Video, *RestErr)
-
-	Create(video Video) (*Video, *RestErr)
-}
-
-
-type videoService struct {
-	repository VideoRepository
 }
 
 
@@ -255,25 +266,13 @@ func GetSession() *gocql.Session {
 
 
 func Run()  {
-	userHandler := NewHandler(NewService(NewDbRepository()))
+	videoHandler := NewHandler(NewService(NewDbRepository()))
 
 	router.GET("/video/:id", videoHandler.GetById)
 
 	router.POST("/video", videoHandler.Create)
 
 	_ = router.Run(":8888")
-}
-
-
-type VideoHandler interface {
-	GetById(ctx *gin.Context)
-
-	Create(ctx *gin.Context)
-}
-
-
-type videoHandler struct {
-	videoService videoService
 }
 
 
@@ -293,7 +292,9 @@ func (videoHandler videoHandler) GetById(ctx *gin.Context) {
 
 
 func NewHandler(videoService VideoService) VideoHandler {
-	return &videoHandler{videoService: videoService}
+	return &videoHandler{
+		videoService: videoService,
+	}
 }
 
 

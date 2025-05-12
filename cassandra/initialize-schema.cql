@@ -5,7 +5,7 @@ CREATE KEYSPACE IF NOT EXISTS dream_stream WITH REPLICATION =
 }
 AND DURABLE_WRITES = true;
 
-CREATE TABLE dream_stream.courses
+CREATE TABLE IF NOT EXISTS dream_stream.courses
 (
     id          UUID,
     authors     set<text>,

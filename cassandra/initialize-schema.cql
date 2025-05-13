@@ -23,6 +23,6 @@ INSERT INTO dream_stream.courses (id, authors, created_at, description, language
 -- To create a CSV from a table
 sudo bin/cqlsh localhost 9042 --execute "COPY dream_stream.courses TO 'keyspaces_sample_table.csv' WITH HEADER=true"
 
--- To copy from a CSV
+-- To insert from a CSV
 USE dream_stream;
 COPY courses FROM './keyspaces_sample_table.csv' WITH HEADER=true;

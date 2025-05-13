@@ -8,12 +8,13 @@ AND DURABLE_WRITES = true;
 CREATE TABLE IF NOT EXISTS dream_stream.courses
 (
     id          UUID,
+    title       text,
     authors     set<text>,
     created_at  timestamp,
     description text,
-    language    text,
-    title       text,
     edited_at   timestamp,
+    filename    text,
+    language    text,
     PRIMARY KEY (id, title)
 );
 

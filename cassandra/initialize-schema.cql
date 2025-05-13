@@ -13,5 +13,6 @@ CREATE TABLE IF NOT EXISTS dream_stream.courses
     description text,
     language    text,
     title       text,
+    edited_at   timestamp,
     PRIMARY KEY (id, title)
 );

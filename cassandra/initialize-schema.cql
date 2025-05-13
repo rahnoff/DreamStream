@@ -19,3 +19,7 @@ CREATE TABLE IF NOT EXISTS dream_stream.courses
 
 INSERT INTO dream_stream.courses (id, authors, created_at, description, language, title, edited_at)
     VALUES (uuid(), {'Adfsdf Gdgfdg', 'Ffgfdg Dfdf'}, toTimestamp(now()), 'Dfggfdhfghfghgfhfgh fghfghfg fghfghfghfg hgfhgfhfgjghjkdfgdfg', 'EN', 'Hofofdg', toTimestamp(now()));
+
+// To copy from a CSV
+USE dream_stream;
+COPY courses FROM './keyspaces_sample_table.csv' WITH HEADER=true;

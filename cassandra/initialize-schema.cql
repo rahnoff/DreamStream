@@ -8,37 +8,40 @@ AND DURABLE_WRITES = true;
 CREATE TABLE IF NOT EXISTS dream_stream.courses
 (
     id          UUID,
-    title       text,
     authors     set<text>,
+    category    text,
     created_at  timestamp,
     description text,
     edited_at   timestamp,
     filename    text,
     language    text,
+    title       text,
     PRIMARY KEY (id, title)
 );
 
 INSERT INTO dream_stream.courses 
 (
     id,
-    title,
     authors,
+    category,
     created_at,
     description,
     edited_at,
     filename,
-    language
+    language,
+    title
 )
 VALUES
 (
     uuid(),
-    'Tjkfg dfgjkdfg',
     {'Adfsdf Gdgfdg', 'Ffgfdg Dfdf'},
+    'IT',
     toTimestamp(now()),
     'Dfggfdhfghfghgfhfgh fghfghfg fghfghfghfg hgfhgfhfgjghjkdfgdfg',
     toTimestamp(now()),
     'fdgdfg',
     'EN'
+    'Thjldfgdfg'
 );
 
 -- To create a CSV from a table

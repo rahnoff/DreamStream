@@ -29,9 +29,9 @@ CREATE TYPE IF NOT EXISTS statuses AS ENUM
 CREATE TABLE IF NOT EXISTS enrollments.enrollments
 (
     id          uuid        PRIMARY KEY,
-    course_id   uuid        REFERENCES enrollments.courses(id),
+    course_id   uuid        NOT NULL REFERENCES enrollments.courses(id),
     create_at   timestamptz NOT NULL,
     edited_at   timestamptz NOT NULL,
-    employee_id uuid        REFERENCES enrollments.employees(id)
-    status      statuses
+    employee_id uuid        NOT NULL REFERENCES enrollments.employees(id)
+    status      statuses    NOT NULL
 );

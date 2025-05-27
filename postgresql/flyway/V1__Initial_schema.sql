@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS enrollments.courses
     title     text        NOT NULL
 );
 
-CREATE TYPE IF NOT EXISTS statuses AS ENUM
+CREATE TYPE statuses AS ENUM
 (
     'Enrolled',
     'In progress',

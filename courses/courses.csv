@@ -1,4 +1,4 @@
-id,authors,category,created_at,description,edited_at,filename,language,length,title
+id,title,authors,category,created_at,description,edited_at,filename,language,length
 3b854085-d26a-4f8c-90f5-36abbf1756c0,Bonds,"{'Julie Phillips', 'Frederick Bennett', 'Jennifer Mendoza'}",Finance,2024-07-19T14:01:18Z,Introduction to how enterprises manage bonds,2024-09-13T22:38:21Z,finance-bonds.mp4,EN,60
 14d38a11-1900-4eb8-9fc4-f2f9ada5a024,CI/CD mit GitLab,"{'Lauren Green', 'David Walters'}",IT,2024-05-19T11:47:06Z,Übersicht nebst Abbildungen zum Aufbau der Pipeline,2025-02-22T17:15:23Z,it-gitlab.mp4,DE,90
 dca7cae0-6b13-423d-9f1e-2186733e5fc5,Stocks,"{'Seth Wilson', 'Jocelyn Johnston'}",Finance,2024-05-22T04:14:54Z,Overview of how firms handle stocks,2025-04-18T17:39:46Z,finance-stocks.mp4,EN,90

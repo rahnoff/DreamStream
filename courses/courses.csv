@@ -1,0 +1,14 @@
+id,authors,category,created_at,description,edited_at,filename,language,length,title
+3b854085-d26a-4f8c-90f5-36abbf1756c0,Bonds,"{'Julie Phillips', 'Frederick Bennett', 'Jennifer Mendoza'}",Finance,2024-07-19T14:01:18Z,Introduction to how enterprises manage bonds,2024-09-13T22:38:21Z,finance-bonds.mp4,EN,60
+14d38a11-1900-4eb8-9fc4-f2f9ada5a024,CI/CD mit GitLab,"{'Lauren Green', 'David Walters'}",IT,2024-05-19T11:47:06Z,Übersicht nebst Abbildungen zum Aufbau der Pipeline,2025-02-22T17:15:23Z,it-gitlab.mp4,DE,90
+dca7cae0-6b13-423d-9f1e-2186733e5fc5,Stocks,"{'Seth Wilson', 'Jocelyn Johnston'}",Finance,2024-05-22T04:14:54Z,Overview of how firms handle stocks,2025-04-18T17:39:46Z,finance-stocks.mp4,EN,90
+49a2c2f6-6fce-4acb-b672-07cad09a2ade,Configuration management via Ansible,"{'Lauren Green', 'David Walters'}",IT,2024-06-09T12:59:57Z,Ansible theory besides instances of avail,2024-07-05T00:38:06Z,it-ansible.mp4,EN,90
+59964756-6cab-431d-ab18-bb58d3de9aee,IaC von Terraform,"{'Rachel Carlson', 'James Evans'}",IT,2025-01-26T10:50:59Z,Terraform-Theorie zusätzlich zu den Hebelmustern,2024-06-09T05:36:54Z,it-terraform.mp4,DE,120
+cfafc82b-73ee-497f-a41a-f6d49a77fb3d,Monitoring through Prometheus,"{'Lauren Green', 'David Walters'}",IT,2024-09-13T10:34:45Z,Preface of monitoring notion with Prometheus illustrations,2024-12-16T13:23:27Z,it-prometheus.mp4,EN,60
+8539bb2d-6da3-4a1a-965a-acd41aaed325,Corporate finance outline,"{'Julie Phillips', 'Frederick Bennett', 'Jennifer Mendoza'}",Finance,2024-09-18T07:25:42Z,Prologue to corporate finance,2024-11-22T21:45:53Z,finance-outline.mp4,EN,60
+82abd531-b15f-4949-bb84-d36d7c35f0af,Options,"{'Seth Wilson', 'Jocelyn Johnston'}",Finance,2024-05-22T04:14:54Z,Survey of options,2025-04-18T17:39:46Z,finance-options.mp4,EN,90
+8e283f4e-4e70-4ef8-b863-78c9cab9dd1e,SEO fundamentals,"{'Julie Phillips', 'Frederick Bennett', 'Jennifer Mendoza'}",Marketing,2024-07-31T17:01:49Z,Critique of SEO,2025-01-03T21:50:56Z,marketing-seo.mp4,EN,60
+a7495efb-cca8-43a8-8e0f-0e38c0d1fb85,Logging with ELK,"{'Rachel Carlson', 'James Evans'}",IT,2024-09-25T17:57:18Z,Essentials of logging,2025-01-14T09:16:59Z,it-logging.mp4,EN,90
+441d68da-b22f-49ef-89ca-35f1dedff690,Vermarktung von Inhalten,"{'Julie Phillips', 'Frederick Bennett', 'Jennifer Mendoza'}",Marketing,2024-09-15T15:08:56Z,Erste Schritte bei der Erstellung von Inhalten für das Marketing,2024-10-12T19:01:59Z,marketing-content.mp4,DE,60
+4a4b4439-2109-4c37-ab22-bddd0d3373e2,Investment funds,"{'Julie Phillips', 'Frederick Bennett', 'Jennifer Mendoza'}",Finance,2024-08-29T08:51:04Z,Rational behind investment funds of various types,2024-07-19T12:05:43Z,finance-funds.mp4,EN,120
+4683038f-2f67-4ff6-beea-613378a8adea,NoSQL databases with Apache Cassandra,"{'Lauren Green', 'David Walters'}",IT,2025-03-29T09:37:48Z,Apache Cassandra primer,2024-12-16T15:38:47Z,it-cassandra.mp4,EN,120

@@ -23,6 +23,7 @@ CREATE TYPE statuses AS ENUM
 (
     'Enrolled',
     'In progress',
+    'Cancelled',
     'Completed'
 );
 

@@ -45,9 +45,9 @@ VALUES
     'Thjldfgdfg'
 );
 
--- To create a CSV from a table
-sudo bin/cqlsh localhost 9042 --execute "COPY dream_stream.courses TO 'keyspaces_sample_table.csv' WITH HEADER=true"
+-- Create a CSV file from a table
+sudo /opt/cassandra/bin/cqlsh localhost 9042 --execute "COPY dream_stream.courses TO 'dream_stream_courses.csv' WITH HEADER=true"
 
--- To insert from a CSV
+-- Insert to a table from a CSV file
 USE dream_stream;
-COPY courses FROM './keyspaces_sample_table.csv' WITH HEADER=true;
+COPY courses FROM './dream_stream_courses.csv' WITH HEADER=true;

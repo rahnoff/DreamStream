@@ -1,6 +1,8 @@
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
+
 CREATE SCHEMA IF NOT EXISTS enrollments;
+
 
 CREATE TABLE IF NOT EXISTS enrollments.employees
 (
@@ -11,6 +13,7 @@ CREATE TABLE IF NOT EXISTS enrollments.employees
     last_name  text        NOT NULL
 );
 
+
 CREATE TABLE IF NOT EXISTS enrollments.courses
 (
     id         uuid        PRIMARY KEY,
@@ -19,13 +22,15 @@ CREATE TABLE IF NOT EXISTS enrollments.courses
     title      text        NOT NULL
 );
 
+
 CREATE TYPE enrollments.statuses AS ENUM
 (
-    'Enrolled',
-    'In progress',
     'Cancelled',
-    'Completed'
+    'Completed',
+    'Enrolled',
+    'In progress'
 );
+
 
 CREATE TABLE IF NOT EXISTS enrollments.enrollments
 (

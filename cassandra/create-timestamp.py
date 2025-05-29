@@ -1,6 +1,6 @@
 import datetime
 
 
-def generate_example_data() -> str:
+def create_timestamp() -> str:
     timestamp: str = datetime.datetime.now().astimezone().isoformat().replace('T', ' ')
     return timestamp

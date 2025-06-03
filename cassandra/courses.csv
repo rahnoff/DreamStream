@@ -12,3 +12,7 @@ a7495efb-cca8-43a8-8e0f-0e38c0d1fb85,Logging with ELK,"{'Rachel Carlson', 'James
 441d68da-b22f-49ef-89ca-35f1dedff690,Vermarktung von Inhalten,"{'Julie Phillips', 'Frederick Bennett', 'Jennifer Mendoza'}",Marketing,2024-09-15T15:08:56Z,Erste Schritte bei der Erstellung von Inhalten für das Marketing,2024-10-12T19:01:59Z,marketing-content.mp4,DE,60
 4a4b4439-2109-4c37-ab22-bddd0d3373e2,Investment funds,"{'Julie Phillips', 'Frederick Bennett', 'Jennifer Mendoza'}",Finance,2024-08-29T08:51:04Z,Rational behind investment funds of various types,2024-07-19T12:05:43Z,finance-funds.mp4,EN,120
 4683038f-2f67-4ff6-beea-613378a8adea,NoSQL databases with Apache Cassandra,"{'Lauren Green', 'David Walters'}",IT,2025-03-29T09:37:48Z,Apache Cassandra primer,2024-12-16T15:38:47Z,it-cassandra.mp4,EN,120
+23a4cc9d-ed35-49d0-ad85-cc36bdc32331,SQL databases with PostgreSQL,"{'Rachel Carlson', 'James Evans'}",IT,2025-02-24T02:02:44Z,PostgreSQL illustrations,2024-11-01T01:00:47Z,it-postgresql.mp4,EN,120
+09b31ea3-2b5a-43c6-9f85-56713282ab4c,Load balancing via HAProxy,"{'Rachel Carlson', 'James Evans'}",IT,2025-04-29T09:58:38Z,Overview of HAProxy,2024-07-27T01:32:22Z,it-haproxy.mp4,EN,90
+c9f64deb-3546-4bf8-9721-85c2ccab41ae,IPOs,"{'Michelle Gates', 'Heidi Thomas'}",Finance,2024-08-29T08:51:04Z,Rational behind IPOs,2024-07-19T12:05:43Z,finance-ipos.mp4,EN,90
+d12f4bb9-281b-48b6-85cb-5c36947eece9,LBOs,"{'Michelle Gates', 'Heidi Thomas'}",Finance,2024-08-29T08:51:04Z,Prelude to LBOs,2024-07-19T12:05:43Z,finance-lbos.mp4,EN,90

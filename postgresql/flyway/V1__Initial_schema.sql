@@ -45,7 +45,7 @@ CREATE TYPE enrollments.statuses AS ENUM
 CREATE TABLE IF NOT EXISTS enrollments.enrollments
 (
     id          uuid                 PRIMARY KEY,
-    course_id   uuid                 NOT NULL REFERENCES enrollments.courses(id),
+    course_id   uuid                 NOT NULL REFERENCES enrollments.courses(id) ON DELETE CASCADE,
     created_at  timestamptz          NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at   timestamptz          NOT NULL DEFAULT CURRENT_TIMESTAMP,
     employee_id uuid                 NOT NULL REFERENCES enrollments.employees(id) ON DELETE CASCADE,

@@ -57,4 +57,14 @@ CREATE TABLE IF NOT EXISTS enrollments.enrollments
 );
 
 
+CREATE OR REPLACE FUNCTION update_edited_at() RETURNS TRIGGER AS
+$$
+    BEGIN
+        NEW.edited_at = CURRENT_TIMESTAMP;
+        RETURN NEW;
+    END;
+$$
+LANGUAGE 'PL/pgSQL';
+
+
 INSERT INTO enrollments.courses (id, created_at, edited_at, title) VALUES ('3b854085-d26a-4f8c-90f5-36abbf1756c0', )

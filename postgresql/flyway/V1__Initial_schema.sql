@@ -67,4 +67,10 @@ $$
 LANGUAGE 'PL/pgSQL';
 
 
+CREATE TRIGGER update_edited_at
+    BEFORE UPDATE ON enrollments.employees
+    FOR EACH ROW
+    EXECUTE PROCEDURE update_edited_at();
+
+
 INSERT INTO enrollments.courses (id, created_at, edited_at, title) VALUES ('3b854085-d26a-4f8c-90f5-36abbf1756c0', )

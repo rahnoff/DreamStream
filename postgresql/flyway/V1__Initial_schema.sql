@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS enrollments.employees
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     first_name text        NOT NULL,
-    last_name  text        NOT NULL
+    last_name  text        NOT NULL,
+    CHECK (edited_at >= created_at)
 );
 
 

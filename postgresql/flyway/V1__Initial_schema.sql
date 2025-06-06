@@ -72,41 +72,16 @@ $$
     DECLARE
         table_name_variable text;
     BEGIN
-        FOR table_name_variable IN
-            SELECT table_name FROM information_schema.columns WHERE column_name = 'edited_at'
-        LOOP
+        FOR table_name_variable IN SELECT table_name FROM information_schema.columns WHERE column_name = 'edited_at' LOOP
             EXECUTE format('CREATE TRIGGER update_edited_at
                                 BEFORE UPDATE ON enrollments.%I
-                                FOR EACH ROW EXECUTE PROCEDURE update_edited_at()',
-                           table_name_variable,
-                           table_name_variable);
+                                FOR EACH ROW
+                                EXECUTE PROCEDURE update_edited_at()',
+                            table_name_variable,
+                            table_name_variable);
         END loop;
     END
 $$;
-
-
-CREATE TRIGGER update_edited_at
-    BEFORE UPDATE ON enrollments.employees
-    FOR EACH ROW
-    EXECUTE PROCEDURE update_edited_at();
-
-
-CREATE TRIGGER update_edited_at
-    BEFORE UPDATE ON enrollments.categories
-    FOR EACH ROW
-    EXECUTE PROCEDURE update_edited_at();
-
-
-CREATE TRIGGER update_edited_at
-    BEFORE UPDATE ON enrollments.courses
-    FOR EACH ROW
-    EXECUTE PROCEDURE update_edited_at();
-
-
-CREATE TRIGGER update_edited_at
-    BEFORE UPDATE ON enrollments.enrollments
-    FOR EACH ROW
-    EXECUTE PROCEDURE update_edited_at();
 
 
 INSERT INTO enrollments.courses (id, created_at, edited_at, title) VALUES ('3b854085-d26a-4f8c-90f5-36abbf1756c0', )

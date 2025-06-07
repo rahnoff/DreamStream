@@ -2,6 +2,7 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
 
 -- Application schema
+
 CREATE SCHEMA IF NOT EXISTS enrollments;
 
 
@@ -59,6 +60,7 @@ CREATE TABLE IF NOT EXISTS enrollments.enrollments
 
 
 -- Auxiliary stuff
+
 CREATE OR REPLACE FUNCTION update_edited_at() RETURNS TRIGGER AS
 $$
     BEGIN

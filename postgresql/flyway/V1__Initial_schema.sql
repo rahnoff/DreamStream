@@ -94,3 +94,6 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS enrollments.enrollments_m_view AS
             INNER JOIN enrollments.employees AS em ON en.employee_id = em.id
             INNER JOIN enrollments.courses AS co ON en.course_id = co.id
 WITH DATA;
+
+
+INSERT INTO enrollments.categories (id, created_at, edited_at, name) VALUES ('Finance', 'IT', 'Marketing');

@@ -84,4 +84,12 @@ $$
 $$;
 
 
+CREATE MATERIALIZED VIEW IF NOT EXISTS enrollments.enrollments AS
+    SELECT em.first_name, em.last_name, co.name, en.status
+        FROM enrollments.enrollments AS en
+            INNER JOIN enrollments.employees AS em ON en.employee_id = em.id
+            INNER JOIN enrollments.courses AS co ON en.course_id = co.id
+WITH DATA;
+
+
 INSERT INTO enrollments.courses (id, created_at, edited_at, title) VALUES ('3b854085-d26a-4f8c-90f5-36abbf1756c0', )

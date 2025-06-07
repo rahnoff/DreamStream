@@ -29,11 +29,11 @@ CREATE TABLE IF NOT EXISTS enrollments.categories
 
 CREATE TABLE IF NOT EXISTS enrollments.courses
 (
-    id         uuid        PRIMARY KEY,
-    category   uuid        NOT NULL REFERENCES enrollments.categories(id) ON DELETE CASCADE,
-    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    edited_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    name       text        NOT NULL UNIQUE,
+    id            uuid        PRIMARY KEY,
+    category_id   uuid        NOT NULL REFERENCES enrollments.categories(id) ON DELETE CASCADE,
+    created_at    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    edited_at     timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    name          text        NOT NULL UNIQUE,
     CHECK (edited_at >= created_at)
 );
 

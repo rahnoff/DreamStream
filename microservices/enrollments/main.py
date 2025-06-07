@@ -20,6 +20,13 @@ def get_enrollments() -> list[str]:
     return enrollments
 
 
+@enrollments.route('/enrollment/', methods=['GET'])
+def get_enrollment_by_id() -> list[str]:
+    with pool.connection() as connection:
+        enrollments: list[str] = [str(record) for record in connection.execute('SELECT course_id, employee_id, status FROM enrollments.enrollments WHERE id = \'%s\'')]
+    return enrollments
+
+
 @enrollments.route('/enrollment', methods=['POST'])
 def create_enrollment() -> list[str]:
     enrollment_id: str = flask.request.json['enrollment_id']

@@ -84,7 +84,7 @@ $$
 $$;
 
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS enrollments.enrollments AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS enrollments.enrollments_m_view AS
     SELECT em.first_name, em.last_name, co.name, en.status
         FROM enrollments.enrollments AS en
             INNER JOIN enrollments.employees AS em ON en.employee_id = em.id

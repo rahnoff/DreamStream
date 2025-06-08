@@ -89,10 +89,18 @@ $$;
 
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS enrollments.enrollments_m_view AS
-    SELECT em.first_name, em.last_name, co.name, en.status
-        FROM enrollments.enrollments AS en
-            INNER JOIN enrollments.employees AS em ON en.employee_id = em.id
-            INNER JOIN enrollments.courses AS co ON en.course_id = co.id
+    SELECT
+        em.first_name || em.last_name AS employee_name,
+        co.name AS course_name,
+        en.status AS enrollment_status
+    FROM
+        enrollments.enrollments AS en
+    INNER JOIN
+        enrollments.employees AS em
+        ON en.employee_id = em.id
+    INNER JOIN
+        enrollments.courses AS co
+        ON en.course_id = co.id
 WITH DATA;
 
 

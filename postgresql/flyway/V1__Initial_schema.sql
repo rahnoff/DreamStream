@@ -92,6 +92,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS enrollments.enrollments_m_view AS
     SELECT
         em.first_name || em.last_name AS employee_name,
         co.name AS course_name,
+        en.created_at AS enrolled_at,
         en.status AS enrollment_status
     FROM
         enrollments.enrollments AS en

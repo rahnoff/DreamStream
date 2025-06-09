@@ -6,6 +6,9 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 CREATE SCHEMA IF NOT EXISTS enrollments;
 
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA enrollments;
+
+
 CREATE TABLE IF NOT EXISTS enrollments.employees
 (
     id         uuid        PRIMARY KEY,

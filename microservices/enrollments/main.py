@@ -29,7 +29,7 @@ def index() -> str:
 def get_enrollments() -> list[str]:
     postgresql_connection: psycopg_pool.pool.ConnectionPool = connect_to_postgresql()
     with postgresql_connection.connection() as connection:
-        enrollments: list[str] = [str(record) for record in connection.execute('SELECT employee_name, course_name, enrolled_at, enrollment_status FROM enrollments.enrollments_m_view;')]
+        enrollments: list[str] = [str(record) for record in connection.execute('SELECT employee_id, employee_name, course_name, enrolled_at, enrollment_status FROM enrollments.enrollments_m_view;')]
     return enrollments
 
 

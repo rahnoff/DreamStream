@@ -65,3 +65,25 @@ CREATE TABLE IF NOT EXISTS dream_stream.employees
     last_name   text,
     PRIMARY KEY (id, first_name, last_name)
 );
+
+
+CREATE TABLE IF NOT EXISTS dream_stream.courses_by_review
+(
+    id          uuid,
+    created_at  timestamp,
+    edited_at   timestamp,
+    employee_id uuid,
+    review      text,
+    PRIMARY KEY (id, review)
+);
+
+
+CREATE TABLE IF NOT EXISTS dream_stream.courses_by_score
+(
+    id          uuid,
+    created_at  timestamp,
+    edited_at   timestamp,
+    employee_id uuid,
+    score       tinyint,
+    PRIMARY KEY (id, score)
+);

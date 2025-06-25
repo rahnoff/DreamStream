@@ -5,6 +5,7 @@ CREATE KEYSPACE IF NOT EXISTS dream_stream WITH REPLICATION =
 }
 AND DURABLE_WRITES = true;
 
+
 CREATE TABLE IF NOT EXISTS dream_stream.courses
 (
     id          UUID,
@@ -19,6 +20,7 @@ CREATE TABLE IF NOT EXISTS dream_stream.courses
     length      text,
     PRIMARY KEY (id, title)
 );
+
 
 INSERT INTO dream_stream.courses 
 (
@@ -45,9 +47,21 @@ VALUES
     'Thjldfgdfg'
 );
 
+
 -- Create a CSV file from a table
 sudo /opt/cassandra/bin/cqlsh localhost 9042 --execute "COPY dream_stream.courses TO 'dream_stream_courses.csv' WITH HEADER=true"
 
 -- Insert to a table from a CSV file
 USE dream_stream;
 COPY courses FROM './dream_stream_courses.csv' WITH HEADER=true;
+
+
+CREATE TABLE IF NOT EXISTS dream_stream.employees
+(
+    id          UUID,
+    created_at  timestamp,
+    edited_at   timestamp,
+    first_name  text,
+    last_name   text,
+    PRIMARY KEY (id, first_name, last_name)
+);

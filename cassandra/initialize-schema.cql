@@ -9,7 +9,7 @@ AND DURABLE_WRITES = true;
 CREATE TABLE IF NOT EXISTS dream_stream.courses
 (
     id          uuid,
-    title       text,
+    name        text,
     authors     set<text>,
     category    text,
     created_at  timestamp,
@@ -18,38 +18,13 @@ CREATE TABLE IF NOT EXISTS dream_stream.courses
     filename    text,
     language    text,
     length      text,
-    PRIMARY KEY (id, title)
-);
-
-
-INSERT INTO dream_stream.courses 
-(
-    id,
-    authors,
-    category,
-    created_at,
-    description,
-    edited_at,
-    filename,
-    language,
-    title
-)
-VALUES
-(
-    uuid(),
-    {'Adfsdf Gdgfdg', 'Ffgfdg Dfdf'},
-    'IT',
-    toTimestamp(now()),
-    'Dfggfdhfghfghgfhfgh fghfghfg fghfghfghfg hgfhgfhfgjghjkdfgdfg',
-    toTimestamp(now()),
-    'fdgdfg',
-    'EN'
-    'Thjldfgdfg'
+    PRIMARY KEY (id, name)
 );
 
 
 -- Create a CSV file from a table
 sudo /opt/cassandra/bin/cqlsh localhost 9042 --execute "COPY dream_stream.courses TO 'dream_stream_courses.csv' WITH HEADER=true"
+
 
 -- Insert to a table from a CSV file
 USE dream_stream;

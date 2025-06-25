@@ -8,7 +8,7 @@ AND DURABLE_WRITES = true;
 
 CREATE TABLE IF NOT EXISTS dream_stream.courses
 (
-    id          UUID,
+    id          uuid,
     title       text,
     authors     set<text>,
     category    text,
@@ -58,7 +58,7 @@ COPY courses FROM './dream_stream_courses.csv' WITH HEADER=true;
 
 CREATE TABLE IF NOT EXISTS dream_stream.employees
 (
-    id          UUID,
+    id          uuid,
     created_at  timestamp,
     edited_at   timestamp,
     first_name  text,

@@ -66,7 +66,7 @@ def update_enrollment() -> list[str]:
     postgresql_connection: psycopg_pool.pool.ConnectionPool = connect_to_postgresql()
     with postgresql_connection.connection() as connection:
         connection.execute(update_enrollment_query, enrollment)
-    return [enrollment_status, enrollment_id]
+    return [enrollment_id, enrollment_status]
 
 
 if __name__ == '__main__':

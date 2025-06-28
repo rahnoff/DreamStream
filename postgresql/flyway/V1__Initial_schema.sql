@@ -1,23 +1,10 @@
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
 
--- Application schema
-
 CREATE SCHEMA IF NOT EXISTS enrollments;
 
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA enrollments;
-
-
-CREATE TABLE IF NOT EXISTS enrollments.employees
-(
-    id         uuid        PRIMARY KEY,
-    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    edited_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    first_name text        NOT NULL,
-    last_name  text        NOT NULL,
-    CHECK (edited_at >= created_at)
-);
 
 
 CREATE TABLE IF NOT EXISTS enrollments.categories
@@ -37,6 +24,17 @@ CREATE TABLE IF NOT EXISTS enrollments.courses
     created_at    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at     timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     name          text        NOT NULL UNIQUE,
+    CHECK (edited_at >= created_at)
+);
+
+
+CREATE TABLE IF NOT EXISTS enrollments.employees
+(
+    id         uuid        PRIMARY KEY,
+    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    edited_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    first_name text        NOT NULL,
+    last_name  text        NOT NULL,
     CHECK (edited_at >= created_at)
 );
 
@@ -62,16 +60,13 @@ CREATE TABLE IF NOT EXISTS enrollments.enrollments
 );
 
 
--- Auxiliary stuff
-
-CREATE OR REPLACE FUNCTION update_edited_at() RETURNS TRIGGER AS
+CREATE OR REPLACE FUNCTION enrollments.update_edited_at() RETURNS TRIGGER LANGUAGE plpgsql AS
 $$
     BEGIN
         NEW.edited_at = CURRENT_TIMESTAMP;
         RETURN NEW;
     END;
-$$
-LANGUAGE 'plpgsql';
+$$;
 
 
 DO
@@ -80,18 +75,18 @@ $$
         table_name_variable text;
     BEGIN
         FOR table_name_variable IN SELECT table_name FROM information_schema.columns WHERE column_name = 'edited_at' LOOP
-            EXECUTE format('CREATE TRIGGER update_edited_at
+            EXECUTE format('CREATE TRIGGER enrollments.update_edited_at
                                 BEFORE UPDATE ON enrollments.%I
                                 FOR EACH ROW
-                                EXECUTE PROCEDURE update_edited_at()',
-                            table_name_variable,
-                            table_name_variable);
+                                EXECUTE PROCEDURE enrollments.update_edited_at()',
+                           table_name_variable,
+                           table_name_variable);
         END loop;
     END
 $$;
 
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS enrollments.enrollments_m_view AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS enrollments.enrollments_m_v AS
     SELECT
         em.id AS employee_id,
         em.first_name || ' ' || em.last_name AS employee_name,
@@ -107,6 +102,33 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS enrollments.enrollments_m_view AS
         enrollments.courses AS co
         ON en.course_id = co.id
 WITH DATA;
+
+
+CREATE OR REPLACE PROCEDURE enrollments.enroll(course_id uuid, employee_id uuid) LANGUAGE plpgsql AS
+$$
+    BEGIN
+        INSERT INTO enrollments.enrollments
+        (
+            course_id,
+            employee_id,
+            status
+        )
+        VALUES
+        (
+            course_id,
+            employee_id,
+            'Enrolled'
+        );
+    END
+$$;
+
+
+CREATE OR REPLACE PROCEDURE enrollments.update_enrollment_status(id uuid, status enrollments.statuses) LANGUAGE plpgsql AS
+$$
+    BEGIN
+        UPDATE enrollments.enrollments SET status = status WHERE id = id;
+    END
+$$;
 
 
 INSERT INTO enrollments.categories (id, created_at, edited_at, name) VALUES ('c2dfe11c-e405-468a-932d-2ef78195e7f3', '2025-06-08 00:36:42.781959+03:00', '2025-06-08 00:36:42.781959+03:00', 'Finance'),

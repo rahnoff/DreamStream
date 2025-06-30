@@ -1,6 +1,5 @@
 import random
 
-
-customer_id: int = random.randint(0, len(customers_ids))
-course_id: int = random.randint(0, len(courses_ids))
-print(customer_id, course_id)
+def customer_emulator() -> None:
+    customer_id_index: int = random.randint(0, len(customers_ids))
+    course_id_index: int = random.randint(0, len(courses_ids))

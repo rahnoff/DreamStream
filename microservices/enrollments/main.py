@@ -51,9 +51,9 @@ def create_enrollment() -> list[str]:
     employee_id: str = flask.request.json['employee_id']
     # status: str = flask.request.json['status']
     # create_enrollment_query: str = 'INSERT INTO enrollments.enrollments (id, course_id, created_at, edited_at, employee_id, status) VALUES (%s, %s, %s, %s, %s, %s)'
-    create_enrollment_query: str = 'CALL enroll();'
+    create_enrollment_query: str = 'CALL enrollments.enroll(%s, %s);'
     # enrollment: tuple[str] = (enrollment_id, course_id, created_at, edited_at, employee_id, status,)
-    enrollment: tuple[str] = (course_id, employee_id, status,)
+    enrollment: tuple[str] = (course_id, employee_id,)
     postgresql_connection: psycopg_pool.pool.ConnectionPool = connect_to_postgresql()
     with postgresql_connection.connection() as connection:
         connection.execute(create_enrollment_query, enrollment)
@@ -65,8 +65,8 @@ def update_enrollment() -> list[str]:
     enrollment_id: str = flask.request.json['enrollment_id']
     enrollment_status: str = flask.request.json['enrollment_status']
     # update_enrollment_query: str = 'UPDATE enrollments.enrollments SET status = %s WHERE id = %s;'
-    update_enrollment_query: str = 'CALL update_enrollemnt_status();'
-    enrollment: tuple[str] = (enrollment_status, enrollment_id,)
+    update_enrollment_query: str = 'CALL enrollments.update_enrollment_status(%s);'
+    enrollment: tuple[str] = (enrollment_id, enrollment_status,)
     postgresql_connection: psycopg_pool.pool.ConnectionPool = connect_to_postgresql()
     with postgresql_connection.connection() as connection:
         connection.execute(update_enrollment_query, enrollment)

@@ -56,7 +56,8 @@ CREATE TABLE IF NOT EXISTS enrollments.enrollments
     edited_at   timestamptz          NOT NULL DEFAULT CURRENT_TIMESTAMP,
     employee_id uuid                 NOT NULL REFERENCES enrollments.employees(id) ON DELETE CASCADE,
     status      enrollments.statuses NOT NULL,
-    CHECK (edited_at >= created_at)
+    CHECK (edited_at >= created_at),
+    UNIQUE (course_id, employee_id)
 );
 
 
@@ -65,7 +66,7 @@ $$
     BEGIN
         NEW.edited_at = CURRENT_TIMESTAMP;
         RETURN NEW;
-    END;
+    END
 $$;
 
 
@@ -75,7 +76,7 @@ $$
         table_name_variable text;
     BEGIN
         FOR table_name_variable IN SELECT table_name FROM information_schema.columns WHERE column_name = 'edited_at' LOOP
-            EXECUTE format('CREATE TRIGGER enrollments.update_edited_at
+            EXECUTE format('CREATE TRIGGER update_edited_at
                                 BEFORE UPDATE ON enrollments.%I
                                 FOR EACH ROW
                                 EXECUTE PROCEDURE enrollments.update_edited_at()',
@@ -131,6 +132,29 @@ $$
 $$;
 
 
-INSERT INTO enrollments.categories (id, created_at, edited_at, name) VALUES ('c2dfe11c-e405-468a-932d-2ef78195e7f3', '2025-06-08 00:36:42.781959+03:00', '2025-06-08 00:36:42.781959+03:00', 'Finance'),
-                                                                            ('586e78e9-6b23-443f-9bf3-28fb09ec8b7a', '2025-06-08 00:36:42.781959+03:00', '2025-06-08 00:36:42.781959+03:00', 'IT'),
-                                                                            ('62c2aa58-e941-4b85-a982-2e01670c3207', '2025-06-08 00:36:42.781959+03:00', '2025-06-08 00:36:42.781959+03:00', 'Marketing');
+INSERT INTO enrollments.categories
+(
+    id,
+    created_at,
+    edited_at,
+    name
+)
+VALUES
+(
+    'c2dfe11c-e405-468a-932d-2ef78195e7f3',
+    '2025-06-08 00:36:42.781959+03:00',
+    '2025-06-08 00:36:42.781959+03:00',
+    'Finance'
+),
+(
+    '586e78e9-6b23-443f-9bf3-28fb09ec8b7a',
+    '2025-06-08 00:36:42.781959+03:00',
+    '2025-06-08 00:36:42.781959+03:00',
+    'IT'
+),
+(
+    '62c2aa58-e941-4b85-a982-2e01670c3207',
+    '2025-06-08 00:36:42.781959+03:00',
+    '2025-06-08 00:36:42.781959+03:00',
+    'Marketing'
+);

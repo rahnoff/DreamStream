@@ -105,6 +105,9 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS enrollments.enrollments_m_v AS
 WITH DATA;
 
 
+CREATE UNIQUE INDEX enrollments_m_v_index ON enrollments.enrollments_m_v(course_name);
+
+
 CREATE OR REPLACE PROCEDURE enrollments.enroll(course_id uuid, employee_id uuid) LANGUAGE plpgsql AS
 $$
     BEGIN

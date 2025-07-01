@@ -33,31 +33,28 @@ def get_enrollments() -> list[str]:
     return enrollments
 
 
-@enrollments.route('/enrollments/<id>', methods=['GET'])
-def get_enrollment_by_id() -> list[str]:
+@enrollments.route('/enrollments/<employee_id>', methods=['GET'])
+def get_enrollments_by_employee_id(employee_id) -> list[str]:
+    employee_id: tuple[str] = (employee_id,)
+    get_enrollments_by_employee_id_query: str = 'SELECT id, course_id, created_at, status FROM enrollments.enrollments WHERE employee_id = %s;'
     postgresql_connection: psycopg_pool.pool.ConnectionPool = connect_to_postgresql()
     with postgresql_connection.connection() as connection:
-        enrollments: list[str] = [str(record) for record in connection.execute('SELECT course_id, employee_id, employee_name, enrollment_status FROM enrollments.enrollments WHERE id = \'%s\'')]
+        enrollments: list[str] = [str(record) for record in connection.execute(get_enrollments_by_employee_id_query, employee_id)]
     return enrollments
 
 
 @enrollments.route('/enrollments', methods=['POST'])
 def create_enrollment() -> list[str]:
-    # enrollment_id: str = flask.request.json['enrollment_id']
-    # employee_id: str = flask.request.json['employee_id']
     course_id: str = flask.request.json['course_id']
-    # created_at: str = flask.request.json['created_at']
-    # edited_at: str = flask.request.json['edited_at']
     employee_id: str = flask.request.json['employee_id']
-    # status: str = flask.request.json['status']
-    # create_enrollment_query: str = 'INSERT INTO enrollments.enrollments (id, course_id, created_at, edited_at, employee_id, status) VALUES (%s, %s, %s, %s, %s, %s)'
-    create_enrollment_query: str = 'CALL enrollments.enroll(%s, %s);'
-    # enrollment: tuple[str] = (enrollment_id, course_id, created_at, edited_at, employee_id, status,)
     enrollment: tuple[str] = (course_id, employee_id,)
+    create_enrollment_query: str = 'CALL enrollments.enroll(%s, %s);'
+    get_created_enrollment_query: str = 'SELECT id FROM enrollments.enrollments WHERE course_id = %s AND employee_id = %s;'
     postgresql_connection: psycopg_pool.pool.ConnectionPool = connect_to_postgresql()
     with postgresql_connection.connection() as connection:
         connection.execute(create_enrollment_query, enrollment)
-    return [enrollment_id, course_id, created_at, edited_at, employee_id, status]
+        enrollment: list[str] = [str(record) for record in connection.execute(get_created_enrollment_query, enrollment)]
+    return enrollment
 
 
 @enrollments.route('/enrollments/<id>', methods=['PUT'])

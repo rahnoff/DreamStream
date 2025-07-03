@@ -4,8 +4,7 @@ import psycopg_pool
 
 def connect_to_postgresql() -> psycopg_pool.pool.ConnectionPool:
     if 'db' not in flask.g:
-        pool: psycopg_pool.pool.ConnectionPool = psycopg_pool.ConnectionPool(conninfo='host=linux-mint port=5432 dbname=dream_stream user=postgres password=postgres', open=True)
-        flask.g.db: psycopg_pool.pool.ConnectionPool = pool
+        flask.g.db: psycopg_pool.pool.ConnectionPool = psycopg_pool.ConnectionPool(conninfo='host=linux-mint port=5432 dbname=dream_stream user=postgres password=postgres', open=True)
     return flask.g.db
 
 
@@ -58,17 +57,18 @@ def create_enrollment() -> list[str]:
 
 
 @enrollments.route('/enrollments/<id>', methods=['PUT'])
-def update_enrollment() -> list[str]:
-    enrollment_id: str = flask.request.json['enrollment_id']
-    enrollment_status: str = flask.request.json['enrollment_status']
-    # update_enrollment_query: str = 'UPDATE enrollments.enrollments SET status = %s WHERE id = %s;'
-    update_enrollment_query: str = 'CALL enrollments.update_enrollment_status(%s);'
-    enrollment: tuple[str] = (enrollment_id, enrollment_status,)
+def update_enrollment(id) -> list[str]:
+    status: str = flask.request.json['status']
+    enrollment: tuple[str] = (id, status,)
+    id_tuple: tuple[str] = (id,)
+    update_enrollment_query: str = 'CALL enrollments.update_enrollment_status(%s, %s);'
+    get_updated_enrollment_query: str = 'SELECT status FROM enrollments.enrollments WHERE id = %s;'
     postgresql_connection: psycopg_pool.pool.ConnectionPool = connect_to_postgresql()
     with postgresql_connection.connection() as connection:
         connection.execute(update_enrollment_query, enrollment)
-    return [enrollment_id, enrollment_status]
+        enrollment: list[str] = [str(record) for record in connection.execute(get_updated_enrollment_query, id_tuple)]
+    return enrollment
 
 
 if __name__ == '__main__':
-    enrollments.run(debug=True, host='0.0.0.0', port=3000)
+    enrollments.run(host='0.0.0.0', port=3000)

@@ -108,7 +108,7 @@ WITH DATA;
 CREATE UNIQUE INDEX enrollments_m_v_index ON enrollments.enrollments_m_v(course_name);
 
 
-CREATE OR REPLACE PROCEDURE enrollments.enroll(course_id uuid, employee_id uuid) LANGUAGE plpgsql AS
+CREATE OR REPLACE PROCEDURE enrollments.enroll(IN course_id uuid, IN employee_id uuid) LANGUAGE plpgsql AS
 $$
     BEGIN
         INSERT INTO enrollments.enrollments
@@ -127,10 +127,10 @@ $$
 $$;
 
 
-CREATE OR REPLACE PROCEDURE enrollments.update_enrollment_status(id uuid, status enrollments.statuses) LANGUAGE plpgsql AS
+CREATE OR REPLACE PROCEDURE enrollments.update_enrollment_status(IN id_parameter uuid, IN status_parameter enrollments.statuses) LANGUAGE plpgsql AS
 $$
     BEGIN
-        UPDATE enrollments.enrollments SET status = status WHERE id = id;
+        UPDATE enrollments.enrollments SET status = status_parameter WHERE id = id_parameter;
     END
 $$;
 

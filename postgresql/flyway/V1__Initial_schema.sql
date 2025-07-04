@@ -105,10 +105,23 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS enrollments.enrollments_m_v AS
 WITH DATA;
 
 
-CREATE UNIQUE INDEX enrollments_m_v_index ON enrollments.enrollments_m_v(course_name);
+CREATE UNIQUE INDEX enrollments_m_v_index ON enrollments.enrollments_m_v(course_name, employee_id);
 
 
-CREATE OR REPLACE PROCEDURE enrollments.enroll(IN course_id uuid, IN employee_id uuid) LANGUAGE plpgsql AS
+CREATE OR REPLACE FUNCTION enrollments.update_enrollments_m_v() RETURNS trigger LANGUAGE plpgsql AS
+$$
+    BEGIN
+        REFRESH MATERIALIZED VIEW CONCURRENTLY enrollments.enrollments_m_v;
+        RETURN NULL;
+    END
+$$;
+
+
+CREATE TRIGGER update_enrollments_m_v AFTER INSERT OR UPDATE OR DELETE ON enrollments.enrollments
+    FOR EACH STATEMENT EXECUTE PROCEDURE enrollments.update_enrollments_m_v();
+
+
+CREATE OR REPLACE PROCEDURE enrollments.enroll(IN course_id_parameter uuid, IN employee_id_parameter uuid) LANGUAGE plpgsql AS
 $$
     BEGIN
         INSERT INTO enrollments.enrollments
@@ -119,8 +132,8 @@ $$
         )
         VALUES
         (
-            course_id,
-            employee_id,
+            course_id_parameter,
+            employee_id_parameter,
             'Enrolled'
         );
     END

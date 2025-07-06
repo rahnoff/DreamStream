@@ -38,7 +38,9 @@ def get_enrollments_by_employee_id(employee_id) -> list[str]:
     get_enrollments_by_employee_id_query: str = 'SELECT id, course_id, created_at, status FROM enrollments.enrollments WHERE employee_id = %s;'
     postgresql_connection: psycopg_pool.pool.ConnectionPool = connect_to_postgresql()
     with postgresql_connection.connection() as connection:
-        enrollments: list[str] = [str(record) for record in connection.execute(get_enrollments_by_employee_id_query, employee_id)]
+        # enrollments: list[str] = [str(record) for record in connection.execute(get_enrollments_by_employee_id_query, employee_id)]
+        # enrollments: list[str] = [str(record) for record in connection.execute(get_enrollments_by_employee_id_query, employee_id).fetchall()]
+        enrollments: list[str] = connection.execute(get_enrollments_by_employee_id_query, employee_id).fetchall()
     return enrollments
 
 
@@ -52,8 +54,9 @@ def create_enrollment() -> list[str]:
     postgresql_connection: psycopg_pool.pool.ConnectionPool = connect_to_postgresql()
     with postgresql_connection.connection() as connection:
         connection.execute(create_enrollment_query, enrollment)
-        enrollment: list[str] = [str(record) for record in connection.execute(get_created_enrollment_query, enrollment)]
-    return enrollment
+        # enrollment: list[str] = [str(record) for record in connection.execute(get_created_enrollment_query, enrollment)]
+        enrollment_id: list[str] = [str(record) for record in connection.execute(get_created_enrollment_query, enrollment).fetchone()]
+    return enrollment_id
 
 
 @enrollments.route('/enrollments/<id>', methods=['PUT'])

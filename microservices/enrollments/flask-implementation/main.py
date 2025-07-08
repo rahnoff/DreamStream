@@ -1,10 +1,19 @@
+import os
+
 import flask
 import psycopg_pool
 
 
 def connect_to_postgresql() -> psycopg_pool.pool.ConnectionPool:
+    postgresql_server = os.environ['POSTGRESQL_SERVER']
+    postgresql_port = os.environ['POSTGRESQL_PORT']
+    postgresql_database_name = os.environ['POSTGRESQL_DATABASE_NAME']
+    postgresql_user = os.environ['POSTGRESQL_USER']
+    postgresql_password = os.environ['POSTGRESQL_PASSWORD']
     if 'db' not in flask.g:
-        flask.g.db: psycopg_pool.pool.ConnectionPool = psycopg_pool.ConnectionPool(conninfo='host=linux-mint port=5432 dbname=dream_stream user=postgres password=postgres', open=True)
+        connection_info = f"host={postgresql_server} port={postgresql_port} dbname={postgresql_database_name} user={postgresql_user} password={postgresql_password}"
+        flask.g.db: psycopg_pool.pool.ConnectionPool = psycopg_pool.ConnectionPool(conninfo=connection_info, open=True)
+        # flask.g.db: psycopg_pool.pool.ConnectionPool = psycopg_pool.ConnectionPool(conninfo='host=linux-mint port=5432 dbname=dream_stream user=postgres password=postgres', open=True)
     return flask.g.db
 
 
@@ -74,4 +83,5 @@ def update_enrollment(id) -> list[str]:
 
 
 if __name__ == '__main__':
-    enrollments.run(host='0.0.0.0', port=3000)
+    flask_port = os.environ['FLASK_PORT']
+    enrollments.run(host='0.0.0.0', port=flask_port)

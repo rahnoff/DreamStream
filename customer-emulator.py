@@ -3,6 +3,7 @@ import csv
 import http.client
 import json
 import random
+import os
 
 
 def read_courses_ids(file_name: str) -> list[str]:
@@ -22,10 +23,14 @@ def read_employees_ids(file_name: str) -> list[str]:
 
 
 def customer_emulator() -> None:
+    enrollments_server = os.environ['ENROLLMENTS_SERVER']
+    enrollments_port = os.environ['ENROLLMENTS_PORT']
+    print(enrollments_port, enrollments_server)
     courses_ids: list[str] = read_courses_ids('/var/tmp/courses.csv')
     employees_ids: list[str] = read_employees_ids('/var/tmp/employees.csv')
     headers = {'Content-Type': 'application/json'}
-    with contextlib.closing(http.client.HTTPConnection('localhost', 3000)) as connection:
+    # with contextlib.closing(http.client.HTTPConnection('localhost', 3000)) as connection:
+    with contextlib.closing(http.client.HTTPConnection(enrollments_server, enrollments_port)) as connection:
         while True:
             course_id: str = random.choice(courses_ids)
             employee_id: str = random.choice(employees_ids)

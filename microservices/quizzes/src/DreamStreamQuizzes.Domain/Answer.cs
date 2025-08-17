@@ -1,18 +1,25 @@
 namespace DreamStreamQuizzes.Domain;
 
-[Table("categories", Schema = "quizzes")]
-public class Category
+[Table("answers", Schema = "quizzes")]
+public class Answer
 {
     [Column("id", TypeName = "uuid")]
     [Key]
-    public Guid CategoryId { get; set; }
+    public Guid AnswerId { get; set; }
 
-    [Column("created_at", TypeName = "timestamp with time zone")]
+    [Column("content", TypeName = "text")]
+    public string Content { get; set; }
+
+    [Column("correctness", TypeName = "bool")]
+    public bool Correctness { get; set; }
+
+    [Column("created_at", TypeName = "timestamptz")]
     public DateTimeOffset CreatedAt { get; set; }
 
-    [Column("edited_at", TypeName = "timestamp with time zone")]
+    [Column("edited_at", TypeName = "timestamptz")]
     public DateTimeOffset EditedAt { get; set; }
 
-    [Column("name", TypeName = "text")]
-    public String Name { get; set; }
+    [Column("question_id", TypeName = "uuid")]
+    [ForeignKey("questions")]
+    public Guid QuestionId { get; set; }
 }

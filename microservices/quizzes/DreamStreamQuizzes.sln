@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DreamStreamQuizzes.API.Test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DreamStreamQuizzes.Domain", "src\DreamStreamQuizzes.Domain\DreamStreamQuizzes.Domain.csproj", "{065D71D9-E1D6-41A3-A485-6EDC93130E91}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DreamStreamQuizzes.Infrastructure", "src\DreamStreamQuizzes.Infrastructure\DreamStreamQuizzes.Infrastructure.csproj", "{52BCF5C9-B83F-448B-8D02-6C3FF1DB5226}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,10 +36,15 @@ Global
 		{065D71D9-E1D6-41A3-A485-6EDC93130E91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{065D71D9-E1D6-41A3-A485-6EDC93130E91}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{065D71D9-E1D6-41A3-A485-6EDC93130E91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52BCF5C9-B83F-448B-8D02-6C3FF1DB5226}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52BCF5C9-B83F-448B-8D02-6C3FF1DB5226}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52BCF5C9-B83F-448B-8D02-6C3FF1DB5226}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52BCF5C9-B83F-448B-8D02-6C3FF1DB5226}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{2024CF9B-40FE-4EDC-BE36-7624B782A582} = {C7F8CD26-1472-47AF-8562-811D17787FFD}
 		{AA49BE39-ADBE-4C45-A1C8-CEBEA642F4D1} = {06CDF38E-E1F1-4D52-9137-424771AA29EB}
 		{065D71D9-E1D6-41A3-A485-6EDC93130E91} = {C7F8CD26-1472-47AF-8562-811D17787FFD}
+		{52BCF5C9-B83F-448B-8D02-6C3FF1DB5226} = {C7F8CD26-1472-47AF-8562-811D17787FFD}
 	EndGlobalSection
 EndGlobal

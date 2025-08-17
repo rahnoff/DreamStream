@@ -11,12 +11,9 @@ public class Quiz
     [ForeignKey("courses")]
     public Guid CourseId { get; set; }
 
-    [Column("created_at", TypeName = "timestamp with time zone")]
+    [Column("created_at", TypeName = "timestamptz")]
     public DateTimeOffset CreatedAt { get; set; }
 
-    [Column("edited_at", TypeName = "timestamp with time zone")]
+    [Column("edited_at", TypeName = "timestamptz")]
     public DateTimeOffset EditedAt { get; set; }
-
-    [Column("name", TypeName = "text")]
-    public String Name { get; set; }
 }

@@ -7,10 +7,10 @@ public class Employee
     [Key]
     public Guid EmployeeId { get; set; }
 
-    [Column("created_at", TypeName = "timestamp with time zone")]
+    [Column("created_at", TypeName = "timestamptz")]
     public DateTimeOffset CreatedAt { get; set; }
 
-    [Column("edited_at", TypeName = "timestamp with time zone")]
+    [Column("edited_at", TypeName = "timestamptz")]
     public DateTimeOffset EditedAt { get; set; }
 
     [Column("first_name", TypeName = "text")]

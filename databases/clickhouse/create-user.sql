@@ -1,0 +1,1 @@
+CREATE USER IF NOT EXISTS dba ON CLUSTER statisticlogs HOST ANY IDENTIFIED WITH sha256_password BY '123' VALID UNTIL 'infinity';

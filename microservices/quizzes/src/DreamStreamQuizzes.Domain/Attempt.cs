@@ -14,5 +14,5 @@ public class Attempt
     public DateTimeOffset EditedAt { get; set; }
 
     [Column("name", TypeName = "text")]
-    public String Name { get; set; }
+    public string Name { get; set; }
 }

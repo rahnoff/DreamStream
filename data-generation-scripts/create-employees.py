@@ -1,15 +1,24 @@
 import csv
 import datetime
 
+<<<<<<< HEAD
 import faker
 
 
 def create_faker_instance() -> faker.proxy.Faker:
     fake: faker.proxy.Faker = faker.Faker()
+=======
+from faker import Faker
+
+
+def create_faker_instance() -> Faker:
+    fake: Faker = Faker()
+>>>>>>> 45a50ea570650c68c34638bc618e2e11f7ea3032
     return fake
 
 
 def create_employees_csv() -> None:
+<<<<<<< HEAD
     fake: faker.proxy.Faker = create_faker_instance()
     ids: list[str] = [fake.uuid4() for id in range(1000000)]
     created_ats: list[str] = [datetime.datetime.now().astimezone().isoformat().replace('T', ' ') for created_at in range(1000000)]
@@ -21,6 +30,18 @@ def create_employees_csv() -> None:
         employees_csv.write('id,created_at,edited_at,email,first_name,last_name' + '\n')
         writer: _csv.writer = csv.writer(employees_csv, dialect='unix', delimiter=',', escapechar='\\', quoting=csv.QUOTE_NONE)
         for record in zip(ids, created_ats, edited_ats, emails, first_names, last_names):
+=======
+    fake: Faker = create_faker_instance()
+    ids: list[str] = [fake.uuid4() for id in range(10000)]
+    created_ats: list[str] = [datetime.datetime.now().astimezone().isoformat().replace('T', ' ') for created_at in range(10000)]
+    edited_ats: list[str] = [datetime.datetime.now().astimezone().isoformat().replace('T', ' ') for edited_at in range(10000)]
+    first_names: list[str] = [fake.first_name() for first_name in range(10000)]
+    last_names: list[str] = [fake.last_name() for last_name in range(10000)]
+    with open('employees.csv', 'wt', encoding='utf-8', newline='') as employees_csv:
+        employees_csv.write('id,created_at,edited_at,first_name,last_name' + '\n')
+        writer: _csv.writer = csv.writer(employees_csv, dialect='unix', delimiter=',', escapechar='\\', quoting=csv.QUOTE_NONE)
+        for record in zip(ids, created_ats, edited_ats, first_names, last_names):
+>>>>>>> 45a50ea570650c68c34638bc618e2e11f7ea3032
             writer.writerow(record)
 
 

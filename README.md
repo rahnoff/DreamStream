@@ -1,8 +1,5 @@
 # DreamStream
 
-Example microservices based E-Learning platform
-
-
 ## How to run
 
 `psql -c "\copy enrollments.courses from '/tmp/courses.csv' with DELIMITER ',' CSV HEADER" -d dream_stream -h /var/run/postgresql -U postgres`

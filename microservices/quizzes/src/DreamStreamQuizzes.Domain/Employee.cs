@@ -14,8 +14,8 @@ public class Employee
     public DateTimeOffset EditedAt { get; set; }
 
     [Column("first_name", TypeName = "text")]
-    public string FirstName { get; set; }
+    public String FirstName { get; set; }
 
     [Column("second_name", TypeName = "text")]
-    public string LastName { get; set; }
+    public String LastName { get; set; }
 }

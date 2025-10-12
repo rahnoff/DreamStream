@@ -35,23 +35,16 @@ type EnrollmentsMicroservice struct {
 
 func (em *EnrollmentsMicroservice) Initialize() {
 	postgresqlPool, postgresqlPoolCreationError := pgxpool.New(context.Background(), os.Getenv("POSTGRESQL_URL"))
-
 	if (postgresqlPoolCreationError != nil) {
 		log.Fatal("Unable to create a PostgreSQL connection pool:\n", postgresqlPoolCreationError.Error())
 	}
-
 	postgresqlPoolPingError := postgresqlPool.Ping(context.Background())
-
 	if (postgresqlPoolPingError != nil) {
 		log.Fatal("Unable to ping a PostgreSQL server:\n", postgresqlPoolPingError.Error())
 	}
-
 	log.Println("Connected to a PostgreSQL server")
-
 	em.PostgresqlPool = postgresqlPool
-
 	em.Router = mux.NewRouter()
-
 	em.initializeRoutes()
 }
 
@@ -59,7 +52,7 @@ func (em *EnrollmentsMicroservice) initializeRoutes() {
 	em.Router.HandleFunc("/enrollments", em.getEnrollments).Methods("GET")
 	em.Router.HandleFunc("/enrollments/{employee_id}", em.getEnrollmentsByEmployeeID).Methods("GET")
 	em.Router.HandleFunc("/enrollments", em.createEnrollment).Methods("POST")
-	// a.Router.HandleFunc("/enrollments/{id}", a.updateProduct).Methods("PUT")
+	em.Router.HandleFunc("/enrollments/{id}", em.updateEnrollment).Methods("PUT")
 	// a.Router.HandleFunc("/enrollments/{id}", a.deleteProduct).Methods("DELETE")
 }
 

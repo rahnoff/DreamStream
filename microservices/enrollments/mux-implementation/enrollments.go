@@ -21,6 +21,13 @@ type EnrollmentOut struct {
 	EnrollmentStatus string    `json:"enrollment_status"`
 }
 
+type EnrollmentByEmployeeIDOut struct {
+	EnrollmentID     uuid.UUID `json:"enrollment_id"`
+	CourseID         uuid.UUID `json:"course_id"`
+	CreatedAt        time.Time `json:"created_at"`
+	EnrollmentStatus string    `json:"enrollment_status"`
+}
+
 type EnrollmentsMicroservice struct {
 	PostgresqlPool *pgxpool.Pool
 	Router         *mux.Router
@@ -28,23 +35,30 @@ type EnrollmentsMicroservice struct {
 
 func (em *EnrollmentsMicroservice) Initialize() {
 	postgresqlPool, postgresqlPoolCreationError := pgxpool.New(context.Background(), os.Getenv("POSTGRESQL_URL"))
+
 	if (postgresqlPoolCreationError != nil) {
 		log.Fatal("Unable to create a PostgreSQL connection pool:\n", postgresqlPoolCreationError.Error())
 	}
+
 	postgresqlPoolPingError := postgresqlPool.Ping(context.Background())
+
 	if (postgresqlPoolPingError != nil) {
 		log.Fatal("Unable to ping a PostgreSQL server:\n", postgresqlPoolPingError.Error())
 	}
+
 	log.Println("Connected to a PostgreSQL server")
+
 	em.PostgresqlPool = postgresqlPool
+
 	em.Router = mux.NewRouter()
+
 	em.initializeRoutes()
 }
 
 func (em *EnrollmentsMicroservice) initializeRoutes() {
 	em.Router.HandleFunc("/enrollments", em.getEnrollments).Methods("GET")
-	// a.Router.HandleFunc("/enrollments/{id}", a.getEnrollments).Methods("GET")
-	// a.Router.HandleFunc("/enrollments", a.createProduct).Methods("POST")
+	em.Router.HandleFunc("/enrollments/{employee_id}", em.getEnrollmentsByEmployeeID).Methods("GET")
+	em.Router.HandleFunc("/enrollments", em.createEnrollment).Methods("POST")
 	// a.Router.HandleFunc("/enrollments/{id}", a.updateProduct).Methods("PUT")
 	// a.Router.HandleFunc("/enrollments/{id}", a.deleteProduct).Methods("DELETE")
 }
@@ -62,7 +76,6 @@ func (em *EnrollmentsMicroservice) getEnrollments(responseWriter http.ResponseWr
 		enrollmentsScanError := enrollments.Scan(&enrollmentOut.EmployeeID, &enrollmentOut.EmployeeName, &enrollmentOut.CourseName, &enrollmentOut.EnrolledAt, &enrollmentOut.EnrollmentStatus)
 		if (enrollmentsScanError != nil) {
 			respondWithError(responseWriter, http.StatusInternalServerError, "Unable to scan enrollments")
-			// log.Fatal(enrollmentsScanError.Error())
 			return
 		}
 		enrollmentsOuts = append(enrollmentsOuts, enrollmentOut)
@@ -70,16 +83,36 @@ func (em *EnrollmentsMicroservice) getEnrollments(responseWriter http.ResponseWr
 	respondWithJSON(responseWriter, http.StatusOK, enrollmentsOuts)
 }
 
-func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	response, _ := json.Marshal(payload)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	w.Write(response)
+func (em *EnrollmentsMicroservice) getEnrollmentsByEmployeeID(responseWriter http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+	enrollmentsByEmployeeID, enrollmentsByEmployeeIDSelectError := em.PostgresqlPool.Query(context.Background(), "SELECT id, course_id, created_at, status FROM enrollments.enrollments WHERE employee_id = $1;", vars["employee_id"])
+	if (enrollmentsByEmployeeIDSelectError != nil) {
+		respondWithError(responseWriter, http.StatusInternalServerError, "Unable to retrieve enrollments by an employee ID")
+		return
+	}
+	defer enrollmentsByEmployeeID.Close()
+	var enrollmentsByEmployeeIDOuts []EnrollmentByEmployeeIDOut
+	for (enrollmentsByEmployeeID.Next()) {
+		var enrollmentByEmployeeIDOut EnrollmentByEmployeeIDOut
+		enrollmentsByEmployeeIDScanError := enrollmentsByEmployeeID.Scan(&enrollmentByEmployeeIDOut.EnrollmentID, &enrollmentByEmployeeIDOut.CourseID, &enrollmentByEmployeeIDOut.CreatedAt, &enrollmentByEmployeeIDOut.EnrollmentStatus)
+		if (enrollmentsByEmployeeIDScanError != nil) {
+			respondWithError(responseWriter, http.StatusInternalServerError, "Unable to scan enrollments by an employee ID")
+			return
+		}
+		enrollmentsByEmployeeIDOuts = append(enrollmentsByEmployeeIDOuts, enrollmentByEmployeeIDOut)
+	}
+	respondWithJSON(responseWriter, http.StatusOK, enrollmentsByEmployeeIDOuts)
 }
 
-// respondWithError writes error response
-func respondWithError(w http.ResponseWriter, code int, message string) {
-	respondWithJSON(w, code, map[string]string{"error": message})
+func respondWithJSON(responseWriter http.ResponseWriter, code int, payload interface{}) {
+	response, _ := json.Marshal(payload)
+	responseWriter.Header().Set("Content-Type", "application/json")
+	responseWriter.WriteHeader(code)
+	responseWriter.Write(response)
+}
+
+func respondWithError(responseWriter http.ResponseWriter, code int, message string) {
+	respondWithJSON(responseWriter, code, map[string]string{"error": message})
 }
 
 func (em *EnrollmentsMicroservice) Run(address string) {

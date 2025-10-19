@@ -21,6 +21,15 @@ type EnrollmentOut struct {
 	EnrollmentStatus string    `json:"enrollment_status"`
 }
 
+type EnrollmentInPostRequest struct {
+	CourseID   uuid.UUID `json:"course_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
+}
+
+type EnrollmentOutPostRequest struct {
+	EnrollmentID uuid.UUID `json:"enrollment_id"`
+}
+
 type EnrollmentByEmployeeIDOut struct {
 	EnrollmentID     uuid.UUID `json:"enrollment_id"`
 	CourseID         uuid.UUID `json:"course_id"`
@@ -34,7 +43,13 @@ type EnrollmentsMicroservice struct {
 }
 
 func (em *EnrollmentsMicroservice) Initialize() {
-	postgresqlPool, postgresqlPoolCreationError := pgxpool.New(context.Background(), os.Getenv("POSTGRESQL_URL"))
+	postgresqlURL := os.Getenv("POSTGRESQL_URL")
+	if (postgresqlURL == "") {
+		postgresqlURL = "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
+		// log.Println(postgresqlURL)
+	}
+	// postgresqlPool, postgresqlPoolCreationError := pgxpool.New(context.Background(), os.Getenv("POSTGRESQL_URL"))
+	postgresqlPool, postgresqlPoolCreationError := pgxpool.New(context.Background(), postgresqlURL)
 	if (postgresqlPoolCreationError != nil) {
 		log.Fatal("Unable to create a PostgreSQL connection pool:\n", postgresqlPoolCreationError.Error())
 	}
@@ -97,6 +112,50 @@ func (em *EnrollmentsMicroservice) getEnrollmentsByEmployeeID(responseWriter htt
 	respondWithJSON(responseWriter, http.StatusOK, enrollmentsByEmployeeIDOuts)
 }
 
+func (em *EnrollmentsMicroservice) createEnrollment(responseWriter http.ResponseWriter, request *http.Request) {
+	var (
+		enrollmentInPostRequest  EnrollmentInPostRequest
+		enrollmentOutPostRequest EnrollmentOutPostRequest
+	)
+	decoder := json.NewDecoder(request.Body)
+	decodeRequestBodyToEnrollmentInPostRequestError := decoder.Decode(&enrollmentInPostRequest)
+	if (decodeRequestBodyToEnrollmentInPostRequestError != nil) {
+		log.Println("Unable to decode a request body into enrollmentInPostRequest:\n", decodeRequestBodyToEnrollmentInPostRequestError.Error())
+		respondWithError(responseWriter, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	defer request.Body.Close()
+	enrollError := em.PostgresqlPool.QueryRow(context.Background(), "CALL enrollments.enroll_out($1, $2, NULL)", enrollmentInPostRequest.CourseID, enrollmentInPostRequest.EmployeeID).Scan(&enrollmentOutPostRequest.EnrollmentID)
+	if (enrollError != nil) {
+		log.Println("Unable to enroll:\n", enrollError.Error())
+		respondWithError(responseWriter, http.StatusInternalServerError, "Unable to create an enrollment")
+		return
+	}
+	respondWithJSON(responseWriter, http.StatusCreated, enrollmentOutPostRequest)
+}
+
+func (em *EnrollmentsMicroservice) updateEnrollment(responseWriter http.ResponseWriter, Request *http.Request) {
+	vars := mux.Vars(request)
+	var p Product
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&p); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	defer r.Body.Close()
+
+	_, err := a.DB.Exec(context.Background(), 
+		"UPDATE products SET name=$1, price=$2 WHERE id=$3", 
+		p.Name, p.Price, vars["id"])
+	
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Unable to update product")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, p)
+}
+
 func respondWithJSON(responseWriter http.ResponseWriter, code int, payload interface{}) {
 	response, _ := json.Marshal(payload)
 	responseWriter.Header().Set("Content-Type", "application/json")
@@ -108,17 +167,17 @@ func respondWithError(responseWriter http.ResponseWriter, code int, message stri
 	respondWithJSON(responseWriter, code, map[string]string{"error": message})
 }
 
-func (em *EnrollmentsMicroservice) Run(address string) {
-	log.Printf("Server started on %s", address)
-	log.Fatal(http.ListenAndServe(address, em.Router))
+func (em *EnrollmentsMicroservice) Run() {
+	enrollmentsURL := os.Getenv("ENROLLMENTS_URL")
+	if (enrollmentsURL == "") {
+		enrollmentsURL = "127.0.0.1:2000"
+	}
+	log.Printf("Server started on %s", enrollmentsURL)
+	log.Fatal(http.ListenAndServe(enrollmentsURL, em.Router))
 }
 
 func main() {
 	enrollmentsMicroservice := EnrollmentsMicroservice{}
-	postgresqlURL := os.Getenv("POSTGRESQL_URL")
-	if postgresqlURL == "" {
-		postgresqlURL = "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
-	}
 	enrollmentsMicroservice.Initialize()
-	enrollmentsMicroservice.Run(":" + os.Getenv("ENROLLMENTS_PORT"))
+	enrollmentsMicroservice.Run()
 }

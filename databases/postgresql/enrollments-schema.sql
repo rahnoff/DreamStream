@@ -128,7 +128,7 @@ CREATE TRIGGER update_enrollments_m_v AFTER INSERT OR UPDATE OR DELETE ON enroll
     FOR EACH STATEMENT EXECUTE PROCEDURE enrollments.update_enrollments_m_v();
 
 
-CREATE OR REPLACE PROCEDURE enrollments.enroll(IN course_id_parameter uuid, IN employee_id_parameter uuid) LANGUAGE plpgsql AS
+CREATE OR REPLACE PROCEDURE enrollments.enroll(IN course_id_parameter uuid, IN employee_id_parameter uuid, OUT enrollment_id_parameter uuid) LANGUAGE plpgsql AS
 $$
     BEGIN
         INSERT INTO enrollments.enrollments
@@ -142,7 +142,8 @@ $$
             course_id_parameter,
             employee_id_parameter,
             'Enrolled'
-        );
+        )
+        RETURNING id INTO enrollment_id_parameter;
     END
 $$;
 

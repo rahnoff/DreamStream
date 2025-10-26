@@ -13,4 +13,5 @@ CREATE TABLE IF NOT EXISTS dream_stream.enrollments_local ON CLUSTER default
 )
 ENGINE = ReplicatedMergeTree('/clickhouse/tables/{shard}/{database}/{table}', '{replica}')
 PRIMARY KEY(status)
-ORDER BY(status, enrolled_at);
+ORDER BY(status, enrolled_at)
+SETTINGS index_granularity = 8192;

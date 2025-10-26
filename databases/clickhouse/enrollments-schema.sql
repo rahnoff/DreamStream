@@ -1,5 +1,6 @@
 CREATE DATABASE IF NOT EXISTS dream_stream ON CLUSTER default ENGINE = Atomic;
 
+
 CREATE TABLE IF NOT EXISTS dream_stream.enrollments_local ON CLUSTER default
 (
     id                   UInt256 CODEC(T64, ZSTD(1)),
@@ -15,3 +16,6 @@ ENGINE = ReplicatedMergeTree('/clickhouse/tables/{shard}/{database}/{table}', '{
 PRIMARY KEY(status)
 ORDER BY(status, enrolled_at)
 SETTINGS index_granularity = 8192;
+
+
+CREATE TABLE IF NOT EXISTS dream_stream.enrollments_distributed ON CLUSTER default AS dream_stream.enrollments_local ENGINE = Distributed('default', 'dream_stream', 'enrollments_local', rand());

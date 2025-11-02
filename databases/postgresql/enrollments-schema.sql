@@ -40,9 +40,9 @@ CREATE TABLE IF NOT EXISTS enrollments.employees
 );
 
 
-CREATE TABLE IF NOT EXISTS attempts.authors
+CREATE TABLE IF NOT EXISTS enrollments.authors
 (
-    id uuid PRIMARY KEY REFERENCES attempts.employees(id) ON DELETE CASCADE
+    id uuid PRIMARY KEY REFERENCES enrollments.employees(id) ON DELETE CASCADE
 );
 
 
@@ -148,9 +148,10 @@ $$
 $$;
 
 
-CREATE OR REPLACE PROCEDURE enrollments.update_enrollment_status(IN id_parameter uuid, IN status_parameter enrollments.statuses) LANGUAGE plpgsql AS
+CREATE OR REPLACE PROCEDURE enrollments.update_enrollment_status(IN id_parameter_in uuid, IN status_parameter enrollments.statuses, OUT id_parameter_out uuid) LANGUAGE plpgsql AS
 $$
     BEGIN
-        UPDATE enrollments.enrollments SET status = status_parameter WHERE id = id_parameter;
+        UPDATE enrollments.enrollments SET status = status_parameter WHERE id = id_parameter_in
+            RETURNING id INTO id_parameter_out;
     END
 $$;

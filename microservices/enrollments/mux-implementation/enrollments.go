@@ -21,7 +21,7 @@ type EnrollmentOut struct {
 	EnrollmentStatus string    `json:"enrollment_status"`
 }
 
-type EnrollmentInPostRequest struct {
+type EnrollmentInCreatePostRequest struct {
 	CourseID   uuid.UUID `json:"course_id"`
 	EmployeeID uuid.UUID `json:"employee_id"`
 }
@@ -37,6 +37,10 @@ type EnrollmentByEmployeeIDOut struct {
 	EnrollmentStatus string    `json:"enrollment_status"`
 }
 
+type EnrollmentInUpdatePutRequest struct {
+	EnrollmentStatus string `json:"status"`
+}
+
 type EnrollmentsMicroservice struct {
 	PostgresqlPool *pgxpool.Pool
 	Router         *mux.Router
@@ -46,9 +50,7 @@ func (em *EnrollmentsMicroservice) Initialize() {
 	postgresqlURL := os.Getenv("POSTGRESQL_URL")
 	if (postgresqlURL == "") {
 		postgresqlURL = "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
-		// log.Println(postgresqlURL)
 	}
-	// postgresqlPool, postgresqlPoolCreationError := pgxpool.New(context.Background(), os.Getenv("POSTGRESQL_URL"))
 	postgresqlPool, postgresqlPoolCreationError := pgxpool.New(context.Background(), postgresqlURL)
 	if (postgresqlPoolCreationError != nil) {
 		log.Fatal("Unable to create a PostgreSQL connection pool:\n", postgresqlPoolCreationError.Error())
@@ -92,8 +94,8 @@ func (em *EnrollmentsMicroservice) getEnrollments(responseWriter http.ResponseWr
 }
 
 func (em *EnrollmentsMicroservice) getEnrollmentsByEmployeeID(responseWriter http.ResponseWriter, request *http.Request) {
-	vars := mux.Vars(request)
-	enrollmentsByEmployeeID, enrollmentsByEmployeeIDSelectError := em.PostgresqlPool.Query(context.Background(), "SELECT id, course_id, created_at, status FROM enrollments.enrollments WHERE employee_id = $1;", vars["employee_id"])
+	variables := mux.Vars(request)
+	enrollmentsByEmployeeID, enrollmentsByEmployeeIDSelectError := em.PostgresqlPool.Query(context.Background(), "SELECT id, course_id, created_at, status FROM enrollments.enrollments WHERE employee_id = $1;", variables["employee_id"])
 	if (enrollmentsByEmployeeIDSelectError != nil) {
 		respondWithError(responseWriter, http.StatusInternalServerError, "Unable to retrieve enrollments by an employee ID")
 		return
@@ -114,18 +116,18 @@ func (em *EnrollmentsMicroservice) getEnrollmentsByEmployeeID(responseWriter htt
 
 func (em *EnrollmentsMicroservice) createEnrollment(responseWriter http.ResponseWriter, request *http.Request) {
 	var (
-		enrollmentInPostRequest  EnrollmentInPostRequest
-		enrollmentOutPostRequest EnrollmentOutPostRequest
+		enrollmentInCreatePostRequest EnrollmentInCreatePostRequest
+		enrollmentOutPostRequest      EnrollmentOutPostRequest
 	)
 	decoder := json.NewDecoder(request.Body)
-	decodeRequestBodyToEnrollmentInPostRequestError := decoder.Decode(&enrollmentInPostRequest)
-	if (decodeRequestBodyToEnrollmentInPostRequestError != nil) {
-		log.Println("Unable to decode a request body into enrollmentInPostRequest:\n", decodeRequestBodyToEnrollmentInPostRequestError.Error())
+	decodeRequestBodyToEnrollmentInCreatePostRequestError := decoder.Decode(&enrollmentInCreatePostRequest)
+	if (decodeRequestBodyToEnrollmentInCreatePostRequestError != nil) {
+		log.Println("Unable to decode a request body into enrollmentInCreatePostRequest:\n", decodeRequestBodyToEnrollmentInCreatePostRequestError.Error())
 		respondWithError(responseWriter, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer request.Body.Close()
-	enrollError := em.PostgresqlPool.QueryRow(context.Background(), "CALL enrollments.enroll_out($1, $2, NULL)", enrollmentInPostRequest.CourseID, enrollmentInPostRequest.EmployeeID).Scan(&enrollmentOutPostRequest.EnrollmentID)
+	enrollError := em.PostgresqlPool.QueryRow(context.Background(), "CALL enrollments.enroll($1, $2, NULL)", enrollmentInCreatePostRequest.CourseID, enrollmentInCreatePostRequest.EmployeeID).Scan(&enrollmentOutPostRequest.EnrollmentID)
 	if (enrollError != nil) {
 		log.Println("Unable to enroll:\n", enrollError.Error())
 		respondWithError(responseWriter, http.StatusInternalServerError, "Unable to create an enrollment")
@@ -134,26 +136,27 @@ func (em *EnrollmentsMicroservice) createEnrollment(responseWriter http.Response
 	respondWithJSON(responseWriter, http.StatusCreated, enrollmentOutPostRequest)
 }
 
-func (em *EnrollmentsMicroservice) updateEnrollment(responseWriter http.ResponseWriter, Request *http.Request) {
-	vars := mux.Vars(request)
-	var p Product
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&p); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+func (em *EnrollmentsMicroservice) updateEnrollment(responseWriter http.ResponseWriter, request *http.Request) {
+	variables := mux.Vars(request)
+	var (
+		enrollmentInUpdatePutRequest EnrollmentInUpdatePutRequest
+		enrollmentOutPostRequest      EnrollmentOutPostRequest
+	)
+	decoder := json.NewDecoder(request.Body)
+	decodeRequestBodyToEnrollmentInUpdatePutRequestError := decoder.Decode(&enrollmentInUpdatePutRequest)
+	if (decodeRequestBodyToEnrollmentInUpdatePutRequestError != nil) {
+		log.Println("Unable to decode a request body into enrollmentInUpdatePutRequest:\n", decodeRequestBodyToEnrollmentInUpdatePutRequestError.Error())
+		respondWithError(responseWriter, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
-	defer r.Body.Close()
-
-	_, err := a.DB.Exec(context.Background(), 
-		"UPDATE products SET name=$1, price=$2 WHERE id=$3", 
-		p.Name, p.Price, vars["id"])
-	
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Unable to update product")
+	defer request.Body.Close()
+	updateEnrollmentError := em.PostgresqlPool.QueryRow(context.Background(), "CALL enrollments.update_enrollment_status($1, $2, NULL)", variables["id"], enrollmentInUpdatePutRequest.EnrollmentStatus).Scan(&enrollmentOutPostRequest.EnrollmentID)
+	if (updateEnrollmentError != nil) {
+		log.Println("Unable to update an enrollment status:\n", updateEnrollmentError.Error())
+		respondWithError(responseWriter, http.StatusInternalServerError, "Unable to update an enrollment")
 		return
 	}
-
-	respondWithJSON(w, http.StatusOK, p)
+	respondWithJSON(responseWriter, http.StatusCreated, enrollmentOutPostRequest)
 }
 
 func respondWithJSON(responseWriter http.ResponseWriter, code int, payload interface{}) {

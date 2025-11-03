@@ -13,31 +13,31 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type EnrollmentOut struct {
+type EnrollmentOutGetRequest struct {
 	EmployeeID       uuid.UUID `json:"employee_id"`
 	EmployeeName     string    `json:"employee_name"`
 	CourseName       string    `json:"course_name"`
 	EnrolledAt       time.Time `json:"enrolled_at"`
-	EnrollmentStatus string    `json:"enrollment_status"`
+	EnrollmentStatus string    `json:"status"`
 }
 
-type EnrollmentInCreatePostRequest struct {
+type EnrollmentInPostRequest struct {
 	CourseID   uuid.UUID `json:"course_id"`
 	EmployeeID uuid.UUID `json:"employee_id"`
 }
 
-type EnrollmentOutPostRequest struct {
-	EnrollmentID uuid.UUID `json:"enrollment_id"`
+type EnrollmentOutGeneric struct {
+	EnrollmentID uuid.UUID `json:"id"`
 }
 
-type EnrollmentByEmployeeIDOut struct {
-	EnrollmentID     uuid.UUID `json:"enrollment_id"`
+type EnrollmentByEmployeeIDOutGetRequest struct {
+	EnrollmentID     uuid.UUID `json:"id"`
 	CourseID         uuid.UUID `json:"course_id"`
 	CreatedAt        time.Time `json:"created_at"`
-	EnrollmentStatus string    `json:"enrollment_status"`
+	EnrollmentStatus string    `json:"status"`
 }
 
-type EnrollmentInUpdatePutRequest struct {
+type EnrollmentInPutRequest struct {
 	EnrollmentStatus string `json:"status"`
 }
 
@@ -80,17 +80,17 @@ func (em *EnrollmentsMicroservice) getEnrollments(responseWriter http.ResponseWr
 		return
 	}
 	defer enrollments.Close()
-	var enrollmentsOuts []EnrollmentOut
+	var enrollmentsOutsGetRequest []EnrollmentOutGetRequest
 	for (enrollments.Next()) {
-		var enrollmentOut EnrollmentOut
-		enrollmentsScanError := enrollments.Scan(&enrollmentOut.EmployeeID, &enrollmentOut.EmployeeName, &enrollmentOut.CourseName, &enrollmentOut.EnrolledAt, &enrollmentOut.EnrollmentStatus)
+		var enrollmentOutGetRequest EnrollmentOutGetRequest
+		enrollmentsScanError := enrollments.Scan(&enrollmentOutGetRequest.EmployeeID, &enrollmentOutGetRequest.EmployeeName, &enrollmentOutGetRequest.CourseName, &enrollmentOutGetRequest.EnrolledAt, &enrollmentOutGetRequest.EnrollmentStatus)
 		if (enrollmentsScanError != nil) {
 			respondWithError(responseWriter, http.StatusInternalServerError, "Unable to scan enrollments")
 			return
 		}
-		enrollmentsOuts = append(enrollmentsOuts, enrollmentOut)
+		enrollmentsOutsGetRequest = append(enrollmentsOutsGetRequest, enrollmentOutGetRequest)
 	}
-	respondWithJSON(responseWriter, http.StatusOK, enrollmentsOuts)
+	respondWithJSON(responseWriter, http.StatusOK, enrollmentsOutsGetRequest)
 }
 
 func (em *EnrollmentsMicroservice) getEnrollmentsByEmployeeID(responseWriter http.ResponseWriter, request *http.Request) {
@@ -101,62 +101,62 @@ func (em *EnrollmentsMicroservice) getEnrollmentsByEmployeeID(responseWriter htt
 		return
 	}
 	defer enrollmentsByEmployeeID.Close()
-	var enrollmentsByEmployeeIDOuts []EnrollmentByEmployeeIDOut
+	var enrollmentsByEmployeeIDOutsGetRequest []EnrollmentByEmployeeIDOutGetRequest
 	for (enrollmentsByEmployeeID.Next()) {
-		var enrollmentByEmployeeIDOut EnrollmentByEmployeeIDOut
-		enrollmentsByEmployeeIDScanError := enrollmentsByEmployeeID.Scan(&enrollmentByEmployeeIDOut.EnrollmentID, &enrollmentByEmployeeIDOut.CourseID, &enrollmentByEmployeeIDOut.CreatedAt, &enrollmentByEmployeeIDOut.EnrollmentStatus)
+		var EnrollmentByEmployeeIDOutGetRequest EnrollmentByEmployeeIDOutGetRequest
+		enrollmentsByEmployeeIDScanError := enrollmentsByEmployeeID.Scan(&EnrollmentByEmployeeIDOutGetRequest.EnrollmentID, &EnrollmentByEmployeeIDOutGetRequest.CourseID, &EnrollmentByEmployeeIDOutGetRequest.CreatedAt, &EnrollmentByEmployeeIDOutGetRequest.EnrollmentStatus)
 		if (enrollmentsByEmployeeIDScanError != nil) {
 			respondWithError(responseWriter, http.StatusInternalServerError, "Unable to scan enrollments by an employee ID")
 			return
 		}
-		enrollmentsByEmployeeIDOuts = append(enrollmentsByEmployeeIDOuts, enrollmentByEmployeeIDOut)
+		enrollmentsByEmployeeIDOutsGetRequest = append(enrollmentsByEmployeeIDOutsGetRequest, EnrollmentByEmployeeIDOutGetRequest)
 	}
-	respondWithJSON(responseWriter, http.StatusOK, enrollmentsByEmployeeIDOuts)
+	respondWithJSON(responseWriter, http.StatusOK, enrollmentsByEmployeeIDOutsGetRequest)
 }
 
 func (em *EnrollmentsMicroservice) createEnrollment(responseWriter http.ResponseWriter, request *http.Request) {
 	var (
-		enrollmentInCreatePostRequest EnrollmentInCreatePostRequest
-		enrollmentOutPostRequest      EnrollmentOutPostRequest
+		enrollmentInPostRequest EnrollmentInPostRequest
+		enrollmentOutGeneric      EnrollmentOutGeneric
 	)
 	decoder := json.NewDecoder(request.Body)
-	decodeRequestBodyToEnrollmentInCreatePostRequestError := decoder.Decode(&enrollmentInCreatePostRequest)
-	if (decodeRequestBodyToEnrollmentInCreatePostRequestError != nil) {
-		log.Println("Unable to decode a request body into enrollmentInCreatePostRequest:\n", decodeRequestBodyToEnrollmentInCreatePostRequestError.Error())
+	decodeRequestBodyToEnrollmentInPostRequestError := decoder.Decode(&enrollmentInPostRequest)
+	if (decodeRequestBodyToEnrollmentInPostRequestError != nil) {
+		log.Println("Unable to decode a request body into enrollmentInPostRequest:\n", decodeRequestBodyToEnrollmentInPostRequestError.Error())
 		respondWithError(responseWriter, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer request.Body.Close()
-	enrollError := em.PostgresqlPool.QueryRow(context.Background(), "CALL enrollments.enroll($1, $2, NULL)", enrollmentInCreatePostRequest.CourseID, enrollmentInCreatePostRequest.EmployeeID).Scan(&enrollmentOutPostRequest.EnrollmentID)
+	enrollError := em.PostgresqlPool.QueryRow(context.Background(), "CALL enrollments.enroll($1, $2, NULL)", enrollmentInPostRequest.CourseID, enrollmentInPostRequest.EmployeeID).Scan(&enrollmentOutGeneric.EnrollmentID)
 	if (enrollError != nil) {
 		log.Println("Unable to enroll:\n", enrollError.Error())
 		respondWithError(responseWriter, http.StatusInternalServerError, "Unable to create an enrollment")
 		return
 	}
-	respondWithJSON(responseWriter, http.StatusCreated, enrollmentOutPostRequest)
+	respondWithJSON(responseWriter, http.StatusCreated, enrollmentOutGeneric)
 }
 
 func (em *EnrollmentsMicroservice) updateEnrollment(responseWriter http.ResponseWriter, request *http.Request) {
 	variables := mux.Vars(request)
 	var (
-		enrollmentInUpdatePutRequest EnrollmentInUpdatePutRequest
-		enrollmentOutPostRequest      EnrollmentOutPostRequest
+		enrollmentInPutRequest EnrollmentInPutRequest
+		enrollmentOutGeneric     EnrollmentOutGeneric
 	)
 	decoder := json.NewDecoder(request.Body)
-	decodeRequestBodyToEnrollmentInUpdatePutRequestError := decoder.Decode(&enrollmentInUpdatePutRequest)
-	if (decodeRequestBodyToEnrollmentInUpdatePutRequestError != nil) {
-		log.Println("Unable to decode a request body into enrollmentInUpdatePutRequest:\n", decodeRequestBodyToEnrollmentInUpdatePutRequestError.Error())
+	decodeRequestBodyToEnrollmentInPutRequestError := decoder.Decode(&enrollmentInPutRequest)
+	if (decodeRequestBodyToEnrollmentInPutRequestError != nil) {
+		log.Println("Unable to decode a request body into enrollmentInPutRequest:\n", decodeRequestBodyToEnrollmentInPutRequestError.Error())
 		respondWithError(responseWriter, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer request.Body.Close()
-	updateEnrollmentError := em.PostgresqlPool.QueryRow(context.Background(), "CALL enrollments.update_enrollment_status($1, $2, NULL)", variables["id"], enrollmentInUpdatePutRequest.EnrollmentStatus).Scan(&enrollmentOutPostRequest.EnrollmentID)
+	updateEnrollmentError := em.PostgresqlPool.QueryRow(context.Background(), "CALL enrollments.update_enrollment_status($1, $2, NULL)", variables["id"], enrollmentInPutRequest.EnrollmentStatus).Scan(&enrollmentOutGeneric.EnrollmentID)
 	if (updateEnrollmentError != nil) {
 		log.Println("Unable to update an enrollment status:\n", updateEnrollmentError.Error())
 		respondWithError(responseWriter, http.StatusInternalServerError, "Unable to update an enrollment")
 		return
 	}
-	respondWithJSON(responseWriter, http.StatusCreated, enrollmentOutPostRequest)
+	respondWithJSON(responseWriter, http.StatusCreated, enrollmentOutGeneric)
 }
 
 func respondWithJSON(responseWriter http.ResponseWriter, code int, payload interface{}) {

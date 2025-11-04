@@ -117,7 +117,7 @@ func (em *EnrollmentsMicroservice) getEnrollmentsByEmployeeID(responseWriter htt
 func (em *EnrollmentsMicroservice) createEnrollment(responseWriter http.ResponseWriter, request *http.Request) {
 	var (
 		enrollmentInPostRequest EnrollmentInPostRequest
-		enrollmentOutGeneric      EnrollmentOutGeneric
+		enrollmentOutGeneric    EnrollmentOutGeneric
 	)
 	decoder := json.NewDecoder(request.Body)
 	decodeRequestBodyToEnrollmentInPostRequestError := decoder.Decode(&enrollmentInPostRequest)
@@ -156,7 +156,7 @@ func (em *EnrollmentsMicroservice) updateEnrollment(responseWriter http.Response
 		respondWithError(responseWriter, http.StatusInternalServerError, "Unable to update an enrollment")
 		return
 	}
-	respondWithJSON(responseWriter, http.StatusCreated, enrollmentOutGeneric)
+	respondWithJSON(responseWriter, http.StatusNoContent, enrollmentOutGeneric)
 }
 
 func respondWithJSON(responseWriter http.ResponseWriter, code int, payload interface{}) {

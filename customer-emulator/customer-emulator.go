@@ -52,12 +52,16 @@ func readIDs(fileName string) ([]string, error) {
 }
 
 func worker(id int, wg *sync.WaitGroup) {
+	serverURL := os.Getenv("SERVER_URL")
+	if (serverURL == "") {
+		serverURL = "http://127.0.0.1:2000/enrollments"
+	}
     defer wg.Done()
-	coursesIDs, err := readIDs("courses.csv")
+	coursesIDs, err := readIDs("/var/tmp/courses.csv")
 	if err != nil {
 		log.Fatal(err)
 	}
-	employeesIDs, err := readIDs("employees.csv")
+	employeesIDs, err := readIDs("/var/tmp/employees.csv")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -82,8 +86,8 @@ func worker(id int, wg *sync.WaitGroup) {
 	}
 
 	// Create a new HTTP request
-	url := "http://127.0.0.1:2000/enrollments"
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	// url := "http://127.0.0.1:2000/enrollments"
+	req, err := http.NewRequest("POST", serverURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		panic(err)
 	}

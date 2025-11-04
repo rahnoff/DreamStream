@@ -1,62 +1,68 @@
+import ast
 import contextlib
 import csv
 import http.client
 import json
-import random
 import os
+import random
+import time
 
 
-def read_courses_ids(file_name: str) -> list[str]:
-    with open(file_name, 'r', newline='') as csv_file:
-        reader: _csv.reader = csv.reader(csv_file, dialect='unix', delimiter=',', escapechar='\\', quoting=csv.QUOTE_NONE)
+def read_ids(file_name: str) -> list[str]:
+    with open(file_name, 'rt', newline='') as csv_file:
+        reader: _csv.reader = csv.reader(
+            csv_file,
+            dialect='unix',
+            delimiter=',',
+            escapechar='\\',
+            quoting=csv.QUOTE_NONE)
         next(reader)
-        courses_ids: list[str] = [row[0] for row in reader]
-        return courses_ids
-
-
-def read_employees_ids(file_name: str) -> list[str]:
-    with open(file_name, 'r', newline='') as csv_file:
-        reader: _csv.reader = csv.reader(csv_file, dialect='unix', delimiter=',', escapechar='\\', quoting=csv.QUOTE_NONE)
-        next(reader)
-        employees_ids: list[str] = [row[0] for row in reader]
-        return employees_ids
+        ids: list[str] = [row[0] for row in reader]
+        return ids
 
 
 def customer_emulator() -> None:
     enrollments_server = os.environ['ENROLLMENTS_SERVER']
     enrollments_port = os.environ['ENROLLMENTS_PORT']
-    print(enrollments_port, enrollments_server)
-    courses_ids: list[str] = read_courses_ids('/var/tmp/courses.csv')
-    employees_ids: list[str] = read_employees_ids('/var/tmp/employees.csv')
-    headers = {'Content-Type': 'application/json'}
-    # with contextlib.closing(http.client.HTTPConnection('localhost', 3000)) as connection:
-    with contextlib.closing(http.client.HTTPConnection(enrollments_server, enrollments_port)) as connection:
+    courses_ids: list[str] = read_ids('/var/tmp/courses.csv')
+    employees_ids: list[str] = read_ids('/var/tmp/employees.csv')
+    headers: dict[str, str] = {'Content-Type': 'application/json'}
+    http_client: http.client.HTTPConnection = http.client.HTTPConnection(
+        enrollments_server,
+        enrollments_port)
+    with contextlib.closing(http_client) as connection:
         while True:
             course_id: str = random.choice(courses_ids)
             employee_id: str = random.choice(employees_ids)
-            enrollment: dict[str, str] = {'course_id': course_id, 'employee_id': employee_id}
+            enrollment: dict[str, str] = {
+                'course_id': course_id,
+                'employee_id': employee_id}
             enrollment_json = json.dumps(enrollment)
-            connection.request('POST', '/enrollments', enrollment_json, headers)
+            connection.request(
+                'POST',
+                '/enrollments',
+                enrollment_json,
+                headers)
             response: str = connection.getresponse()
-            if response.status == 200:
-                created_enrollment_id: str = response.read().decode('utf-8').replace('[', '').replace(']', '').replace('"', '').strip()
-                employee_id_url = f"/enrollments/{employee_id}".strip()
-                connection.request('GET', employee_id_url)
-                response = connection.getresponse()
-                enrollments_ids: list[str] = response.read().decode('utf-8').replace('[', '').replace(']', '').replace('"', '').strip().split(',')[0::5]
-                for enrollment_id in enrollments_ids:
-                    if created_enrollment_id == enrollment_id:
-                        created_enrollment_id_url = f"/enrollments/{created_enrollment_id}".strip()
-                        # print(created_enrollment_id_url)
-                        enrollment_status: dict[str, str] = {'status': 'In progress'}
-                        enrollment_status_json = json.dumps(enrollment_status)
-                        # print(enrollment_status_json)
-                        connection.request('PUT', created_enrollment_id_url, enrollment_status_json, headers)
-                        connection.getresponse()
-                        # print('PUT request successful')
-                    else:
-                        continue
-                        # print('Enrollments dont match')
+            if response.status == 201:
+                print('Enrolled')
+                created_enrollment_str: str = response.read().decode('utf-8')
+                created_enrollment_dict: dict[str, str] = ast.literal_eval(created_enrollment_str)
+                created_enrollment_id: str = created_enrollment_dict['id']
+                enrollment_status: dict[str, str] = {'status': 'In progress'}
+                enrollment_status_json = json.dumps(enrollment_status)
+                created_enrollment_id_url = f"/enrollments/{created_enrollment_id}".strip()
+                time.sleep(5)
+                connection.request('PUT', created_enrollment_id_url, enrollment_status_json, headers)
+                response: str = connection.getresponse()
+                response.read()
+                if response.status == 204:
+                    print('Course is in progress')
+                    time.sleep(5)
+                    print('Sending an attempt to a quiz')
+                    time.sleep(5)
+                else:
+                    continue
             else:
                 continue
 

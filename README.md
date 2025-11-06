@@ -1,5 +1,30 @@
 # DreamStream
 
+E-Learning platform, based on microservices
+
+Architectural diagram:
+
+                 +---------+
+                 | Browser |
+                 +---------+
+                      |
+               +-------------+
+               | API Gateway |
+               +-------------+
+             /        |         \
+           /          |           \
++---------+    +-------------+    +----------+    +----------+
+| Courses |    | Enrollments |    | Attempts |    | Superset |
++---------+    +-------------+    +----------+    +----------+
+     |                  \          /                   |
++-----------+          +------------+           +------------+
+| Cassandra |          | PostgreSQL |           | ClickHouse |
++-----------+          +------------+           +------------+
+                                     \         /
+                                      +-------+
+                                      | Kafka |
+                                      +-------+
+
 ## How to run
 
 `psql -c "\copy enrollments.courses from '/tmp/courses.csv' with DELIMITER ',' CSV HEADER" -d dream_stream -h /var/run/postgresql -U postgres`

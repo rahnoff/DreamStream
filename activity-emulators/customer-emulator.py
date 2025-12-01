@@ -60,7 +60,6 @@ def customer_emulator() -> None:
                     print('Course is in progress')
                     time.sleep(5)
                     print('Sending an attempt to a quiz')
-                    time.sleep(5)
                 else:
                     continue
             else:

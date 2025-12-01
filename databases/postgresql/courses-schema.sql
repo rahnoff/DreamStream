@@ -1,10 +1,10 @@
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
 
-CREATE SCHEMA IF NOT EXISTS enrollments;
+CREATE SCHEMA IF NOT EXISTS courses;
 
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA enrollments;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA courses;
 
 
 CREATE TABLE IF NOT EXISTS enrollments.categories
@@ -40,25 +40,20 @@ CREATE TABLE IF NOT EXISTS enrollments.employees
 );
 
 
-CREATE TYPE enrollments.statuses AS ENUM
+CREATE TABLE IF NOT EXISTS enrollments.authors_courses
 (
-    'Cancelled',
-    'Completed',
-    'Enrolled',
-    'In progress'
+    author_id uuid     NOT NULL REFERENCES enrollments.employees(id) ON DELETE CASCADE,
+    course_id smallint NOT NULL REFERENCES enrollments.courses(id) ON DELETE CASCADE
 );
 
 
-CREATE TABLE IF NOT EXISTS enrollments.enrollments
+CREATE TABLE IF NOT EXISTS attempts.quizes
 (
-    id          bigint               GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    course_id   smallint             NOT NULL REFERENCES enrollments.courses(id) ON DELETE CASCADE,
-    created_at  timestamptz          NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    edited_at   timestamptz          NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    employee_id uuid                 NOT NULL REFERENCES enrollments.employees(id) ON DELETE CASCADE,
-    status      enrollments.statuses NOT NULL,
-    CHECK (edited_at >= created_at),
-    UNIQUE (course_id, employee_id)
+    id         uuid        PRIMARY KEY,
+    course_id  uuid        NOT NULL REFERENCES attempts.courses(id) ON DELETE CASCADE,
+    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    edited_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK (edited_at >= created_at)
 );
 
 

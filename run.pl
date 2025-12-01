@@ -4,5 +4,8 @@ use strict;
 use warnings;
 
 sub run() {
-    system('')
+    my $GIT_DIRECTORY = `git rev-parse --show-toplevel`;
+    system('docker', 'compose', '-f', "$GIT_REPOSITORY/databases/postgresql/)
 }
+
+run()

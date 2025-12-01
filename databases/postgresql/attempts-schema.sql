@@ -40,12 +40,6 @@ CREATE TABLE IF NOT EXISTS attempts.employees
 );
 
 
-CREATE TABLE IF NOT EXISTS attempts.authors
-(
-    id uuid PRIMARY KEY REFERENCES attempts.employees(id) ON DELETE CASCADE
-);
-
-
 CREATE TABLE IF NOT EXISTS attempts.quizes
 (
     id         uuid        PRIMARY KEY,
@@ -81,12 +75,25 @@ CREATE TABLE IF NOT EXISTS attempts.answers
 
 CREATE TABLE IF NOT EXISTS attempts.attempts
 (
-    id          uuid        PRIMARY KEY,
+    id          bigint      PRIMARY KEY,
     content     text        NOT NULL UNIQUE,
     correct     bool        NOT NULL,
     created_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    employee_id uuid        NOT NULL REFERENCES attempts.employees(id) ON DELETE CASCADE,
     question_id uuid        NOT NULL REFERENCES attempts.questions(id) ON DELETE CASCADE,
+    CHECK (edited_at >= created_at)
+);
+
+
+CREATE TABLE IF NOT EXISTS attempts.attempts
+(
+    id          bigint      PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    content     jsonb       NOT NULL,
+    created_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    edited_at   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    employee_id uuid        NOT NULL REFERENCES attempts.employees(id) ON DELETE CASCADE,
+    score       decimal(1, 1)       DEFAULT 0.0,
     CHECK (edited_at >= created_at)
 );
 
@@ -117,41 +124,40 @@ $$
 $$;
 
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS enrollments.enrollments_m_v AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS attempts.attempts_m_v AS
     SELECT
         em.id AS employee_id,
         em.first_name || ' ' || em.last_name AS employee_name,
         co.name AS course_name,
-        en.created_at AS enrolled_at,
-        en.status AS enrollment_status
+        at.created_at AS submitted_at
     FROM
-        enrollments.enrollments AS en
+        attempts.attempts AS at
     INNER JOIN
-        enrollments.employees AS em
-        ON en.employee_id = em.id
+        attempts.employees AS em
+        ON at.employee_id = em.id
     INNER JOIN
-        enrollments.courses AS co
-        ON en.course_id = co.id
+        attempts.courses AS co
+        ON at.course_id = co.id
 WITH DATA;
 
 
-CREATE UNIQUE INDEX enrollments_m_v_index ON enrollments.enrollments_m_v(course_name, employee_id);
+CREATE UNIQUE INDEX attempts_m_v_i ON attempts.attempts_m_v(course_name, employee_id);
 
 
-CREATE OR REPLACE FUNCTION enrollments.update_enrollments_m_v() RETURNS trigger LANGUAGE plpgsql AS
+CREATE OR REPLACE FUNCTION attempts.update_attempts_m_v() RETURNS trigger LANGUAGE plpgsql AS
 $$
     BEGIN
-        REFRESH MATERIALIZED VIEW CONCURRENTLY enrollments.enrollments_m_v;
+        REFRESH MATERIALIZED VIEW CONCURRENTLY attempts.attempts_m_v;
         RETURN NULL;
     END
 $$;
 
 
-CREATE TRIGGER update_enrollments_m_v AFTER INSERT OR UPDATE OR DELETE ON enrollments.enrollments
-    FOR EACH STATEMENT EXECUTE PROCEDURE enrollments.update_enrollments_m_v();
+CREATE TRIGGER update_attempts_m_v AFTER INSERT OR UPDATE OR DELETE ON attempts.attempts
+    FOR EACH STATEMENT EXECUTE PROCEDURE attempts.update_attempts_m_v();
 
 
-CREATE OR REPLACE PROCEDURE enrollments.enroll(IN course_id_parameter uuid, IN employee_id_parameter uuid) LANGUAGE plpgsql AS
+CREATE OR REPLACE PROCEDURE attempts.submit(IN course_id_parameter uuid, IN employee_id_parameter uuid) LANGUAGE plpgsql AS
 $$
     BEGIN
         INSERT INTO enrollments.enrollments
@@ -170,9 +176,32 @@ $$
 $$;
 
 
-CREATE OR REPLACE PROCEDURE enrollments.update_enrollment_status(IN id_parameter uuid, IN status_parameter enrollments.statuses) LANGUAGE plpgsql AS
-$$
-    BEGIN
-        UPDATE enrollments.enrollments SET status = status_parameter WHERE id = id_parameter;
-    END
+CREATE OR REPLACE PROCEDURE attempts.verify_answer(
+    p_question_id INT,
+    p_user_answer TEXT,
+    INOUT p_is_correct BOOLEAN
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_correct_answer TEXT;
+BEGIN
+    -- Retrieve the correct answer for the given question
+    SELECT correct_answer INTO v_correct_answer
+    FROM questions
+    WHERE question_id = p_question_id;
+
+    -- Check if the user's answer matches the correct answer (case-insensitive comparison)
+    IF v_correct_answer IS NOT NULL AND LOWER(p_user_answer) = LOWER(v_correct_answer) THEN
+        p_is_correct := TRUE;
+        RAISE NOTICE 'Answer is correct for question %.', p_question_id;
+    ELSE
+        p_is_correct := FALSE;
+        RAISE NOTICE 'Answer is incorrect for question %.', p_question_id;
+    END IF;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE EXCEPTION 'Question ID % not found.', p_question_id;
+END;
 $$;

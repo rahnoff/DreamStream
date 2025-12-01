@@ -22,17 +22,17 @@ type EnrollmentOutGetRequest struct {
 }
 
 type EnrollmentInPostRequest struct {
-	CourseID   uuid.UUID `json:"course_id"`
+	CourseID   int16 `json:"course_id"`
 	EmployeeID uuid.UUID `json:"employee_id"`
 }
 
 type EnrollmentOutGeneric struct {
-	EnrollmentID uuid.UUID `json:"id"`
+	EnrollmentID int64 `json:"id"`
 }
 
 type EnrollmentByEmployeeIDOutGetRequest struct {
-	EnrollmentID     uuid.UUID `json:"id"`
-	CourseID         uuid.UUID `json:"course_id"`
+	EnrollmentID     int64 `json:"id"`
+	CourseID         int16 `json:"course_id"`
 	CreatedAt        time.Time `json:"created_at"`
 	EnrollmentStatus string    `json:"status"`
 }
@@ -140,7 +140,7 @@ func (em *EnrollmentsMicroservice) updateEnrollment(responseWriter http.Response
 	variables := mux.Vars(request)
 	var (
 		enrollmentInPutRequest EnrollmentInPutRequest
-		enrollmentOutGeneric     EnrollmentOutGeneric
+		enrollmentOutGeneric   EnrollmentOutGeneric
 	)
 	decoder := json.NewDecoder(request.Body)
 	decodeRequestBodyToEnrollmentInPutRequestError := decoder.Decode(&enrollmentInPutRequest)

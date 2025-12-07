@@ -11,8 +11,8 @@ def create_faker_instance() -> faker.proxy.Faker:
 
 
 def read_courses_ids() -> list[str]:
-    with open('courses.csv', 'rt', newline='') as csv_file:
-        reader: _csv.reader = csv.reader(csv_file, dialect='unix', delimiter=',', escapechar='\\', quoting=csv.QUOTE_NONE)
+    with open('/var/tmp/courses.csv', 'rt', newline='') as courses_csv:
+        reader: _csv.reader = csv.reader(courses_csv, dialect='unix', delimiter=',', escapechar='\\', quoting=csv.QUOTE_NONE)
         next(reader)
         courses_ids: list[str] = [row[0] for row in reader]
         return courses_ids
@@ -21,6 +21,8 @@ def read_courses_ids() -> list[str]:
 def create_quizes_csv() -> None:
     fake: faker.proxy.Faker = create_faker_instance()
     courses_ids: list[str] = read_courses_ids()
+    ids: list[int] = [id for id in range(1, len(courses_ids) * 2)]
+    courses_ids_randomized: list[str] = [random.choice(courses_ids) for course_id in courses_ids]
     ids_1: list[str] = [fake.uuid4() for course_id in courses_ids]
     ids_2: list[str] = [fake.uuid4() for course_id in courses_ids]
     created_ats_1: list[str] = [datetime.datetime.now().astimezone().isoformat().replace('T', ' ') for course_id in courses_ids]

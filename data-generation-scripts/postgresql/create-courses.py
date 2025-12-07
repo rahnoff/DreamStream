@@ -21,14 +21,20 @@ def read_categories_ids() -> list[int]:
 def create_courses_csv() -> None:
     fake: faker.proxy.Faker = create_faker_instance()
     ids: list[int] = [id for id in range(1, 10001)]
-    categories_ids: list[str] = [random.choice(read_categories_ids()) for category_id in range(10001)]
-    created_ats: list[str] = [datetime.datetime.now().astimezone().isoformat().replace('T', ' ') for created_at in range(10001)]
-    edited_ats: list[str] = [datetime.datetime.now().astimezone().isoformat().replace('T', ' ') for edited_at in range(10001)]
-    names: list[str] = [fake.text(max_nb_chars=20) for name in range(10001)]
+    languages: list[str] = ['EN', 'DE']
+    lengths: list[int] = [20, 30, 40]
+    languages_generated: list[str] = [random.choice(languages) for language in range(10000)]
+    lengths_generated: list[str] = [random.choice(lengths) for length in range(10000)]
+    categories_ids: list[str] = [random.choice(read_categories_ids()) for category_id in range(10000)]
+    created_ats: list[str] = [datetime.datetime.now().astimezone().isoformat().replace('T', ' ') for created_at in range(10000)]
+    descriptions: list[str] = [fake.paragraph(nb_sentences=5) for description in range(10000)]
+    edited_ats: list[str] = [datetime.datetime.now().astimezone().isoformat().replace('T', ' ') for edited_at in range(10000)]
+    filenames: list[str] = [fake.url(schemes=['https']) for url in range(10000)]
+    names: list[str] = [fake.text(max_nb_chars=20) for name in range(10000)]
     with open('/var/tmp/courses.csv', 'wt', encoding='utf-8', newline='') as courses_csv:
-        courses_csv.write('id,category_id,created_at,edited_at,name' + '\n')
+        courses_csv.write('id,category_id,created_at,decription,edited_at,filename,language,length,name' + '\n')
         writer: _csv.writer = csv.writer(courses_csv, dialect='unix', delimiter=',', escapechar='\\', quoting=csv.QUOTE_NONE)
-        for record in zip(ids, categories_ids, created_ats, edited_ats, names):
+        for record in zip(ids, categories_ids, created_ats, descriptions, edited_ats, filenames, languages_generated, lengths_generated, names):
             writer.writerow(record)
 
 

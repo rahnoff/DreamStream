@@ -10,12 +10,12 @@ def create_faker_instance() -> faker.proxy.Faker:
     return fake
 
 
-def read_courses_ids() -> list[str]:
-    with open('/var/tmp/courses.csv', 'rt', newline='') as courses_csv:
-        reader: _csv.reader = csv.reader(courses_csv, dialect='unix', delimiter=',', escapechar='\\', quoting=csv.QUOTE_NONE)
+def read_quizes_ids() -> list[str]:
+    with open('/var/tmp/quizes.csv', 'rt', newline='') as quizes_csv:
+        reader: _csv.reader = csv.reader(quizes_csv, dialect='unix', delimiter=',', escapechar='\\', quoting=csv.QUOTE_NONE)
         next(reader)
-        courses_ids: list[str] = [row[0] for row in reader]
-        return courses_ids
+        quizes_ids: list[str] = [row[0] for row in reader]
+        return quizes_ids
 
 
 def create_quizes_csv() -> None:

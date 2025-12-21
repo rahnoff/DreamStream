@@ -7,20 +7,9 @@ CREATE SCHEMA IF NOT EXISTS enrollments;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA enrollments;
 
 
-CREATE TABLE IF NOT EXISTS enrollments.categories
-(
-    id         smallint    GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    edited_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    name       text        NOT NULL UNIQUE,
-    CHECK (edited_at >= created_at)
-);
-
-
 CREATE TABLE IF NOT EXISTS enrollments.courses
 (
-    id            smallint    GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    category_id   smallint    NOT NULL REFERENCES enrollments.categories(id) ON DELETE CASCADE,
+    id            int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at     timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     name          text        NOT NULL UNIQUE,
@@ -52,7 +41,7 @@ CREATE TYPE enrollments.statuses AS ENUM
 CREATE TABLE IF NOT EXISTS enrollments.enrollments
 (
     id          bigint               GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    course_id   smallint             NOT NULL REFERENCES enrollments.courses(id) ON DELETE CASCADE,
+    course_id   int                  NOT NULL REFERENCES enrollments.courses(id) ON DELETE CASCADE,
     created_at  timestamptz          NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at   timestamptz          NOT NULL DEFAULT CURRENT_TIMESTAMP,
     employee_id uuid                 NOT NULL REFERENCES enrollments.employees(id) ON DELETE CASCADE,
@@ -106,7 +95,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS enrollments.enrollments_m_v AS
 WITH DATA;
 
 
-CREATE UNIQUE INDEX enrollments_m_v_index ON enrollments.enrollments_m_v(course_name, employee_id);
+CREATE UNIQUE INDEX enrollments_m_v_i ON enrollments.enrollments_m_v(course_name, employee_id);
 
 
 CREATE OR REPLACE FUNCTION enrollments.update_enrollments_m_v() RETURNS trigger LANGUAGE plpgsql AS

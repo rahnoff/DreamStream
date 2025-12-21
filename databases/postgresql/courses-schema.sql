@@ -7,7 +7,7 @@ CREATE SCHEMA IF NOT EXISTS courses;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA courses;
 
 
-CREATE TABLE IF NOT EXISTS enrollments.categories
+CREATE TABLE IF NOT EXISTS courses.categories
 (
     id         smallint    GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -17,10 +17,10 @@ CREATE TABLE IF NOT EXISTS enrollments.categories
 );
 
 
-CREATE TABLE IF NOT EXISTS enrollments.courses
+CREATE TABLE IF NOT EXISTS courses.courses
 (
-    id            smallint    GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    category_id   smallint    NOT NULL REFERENCES enrollments.categories(id) ON DELETE CASCADE,
+    id            int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    category_id   smallint    NOT NULL REFERENCES courses.categories(id) ON DELETE CASCADE,
     created_at    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at     timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     name          text        NOT NULL UNIQUE,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS enrollments.courses
 );
 
 
-CREATE TABLE IF NOT EXISTS enrollments.employees
+CREATE TABLE IF NOT EXISTS courses.employees
 (
     id         uuid        PRIMARY KEY,
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -40,24 +40,54 @@ CREATE TABLE IF NOT EXISTS enrollments.employees
 );
 
 
-CREATE TABLE IF NOT EXISTS enrollments.authors_courses
+CREATE TABLE IF NOT EXISTS courses.authors
 (
-    author_id uuid     NOT NULL REFERENCES enrollments.employees(id) ON DELETE CASCADE,
-    course_id smallint NOT NULL REFERENCES enrollments.courses(id) ON DELETE CASCADE
+    id uuid NOT NULL REFERENCES courses.employees(id) ON DELETE CASCADE
 );
 
 
-CREATE TABLE IF NOT EXISTS attempts.quizes
+CREATE TABLE IF NOT EXISTS courses.authors_courses
 (
-    id         uuid        PRIMARY KEY,
-    course_id  uuid        NOT NULL REFERENCES attempts.courses(id) ON DELETE CASCADE,
+    author_id uuid NOT NULL REFERENCES courses.employees(id) ON DELETE CASCADE,
+    course_id int  NOT NULL REFERENCES courses.courses(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE IF NOT EXISTS courses.quizes
+(
+    id         int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    course_id  int         NOT NULL REFERENCES courses.courses(id) ON DELETE CASCADE,
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    name       text        NOT NULL,
     CHECK (edited_at >= created_at)
 );
 
 
-CREATE OR REPLACE FUNCTION enrollments.update_edited_at() RETURNS TRIGGER LANGUAGE plpgsql AS
+CREATE TABLE IF NOT EXISTS courses.questions
+(
+    id         int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    content    text        NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    edited_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    quiz_id    int         NOT NULL REFERENCES courses.quizes(id) ON DELETE CASCADE,
+    CHECK (edited_at >= created_at)
+);
+
+
+CREATE TABLE IF NOT EXISTS courses.answers
+(
+    id          int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    content     text        NOT NULL,
+    created_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    edited_at   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_correct  bool        NOT NULL,
+    question_id int         NOT NULL REFERENCES courses.questions(id) ON DELETE CASCADE,
+    CHECK (edited_at >= created_at)
+);
+
+
+CREATE OR REPLACE FUNCTION courses.update_edited_at() RETURNS TRIGGER LANGUAGE plpgsql AS
 $$
     BEGIN
         NEW.edited_at = CURRENT_TIMESTAMP;
@@ -73,9 +103,9 @@ $$
     BEGIN
         FOR table_name_variable IN SELECT table_name FROM information_schema.columns WHERE column_name = 'edited_at' LOOP
             EXECUTE format('CREATE TRIGGER update_edited_at
-                                BEFORE UPDATE ON enrollments.%I
+                                BEFORE UPDATE ON courses.%I
                                 FOR EACH ROW
-                                EXECUTE PROCEDURE enrollments.update_edited_at()',
+                                EXECUTE PROCEDURE courses.update_edited_at()',
                            table_name_variable,
                            table_name_variable);
         END loop;
@@ -83,7 +113,7 @@ $$
 $$;
 
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS enrollments.enrollments_m_v AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS courses.courses_m_v AS
     SELECT
         em.id AS employee_id,
         em.first_name || ' ' || em.last_name AS employee_name,
@@ -91,56 +121,27 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS enrollments.enrollments_m_v AS
         en.created_at AS enrolled_at,
         en.status AS enrollment_status
     FROM
-        enrollments.enrollments AS en
+        courses.courses AS en
     INNER JOIN
-        enrollments.employees AS em
+        courses.employees AS em
         ON en.employee_id = em.id
     INNER JOIN
-        enrollments.courses AS co
+        courses.courses AS co
         ON en.course_id = co.id
 WITH DATA;
 
 
-CREATE UNIQUE INDEX enrollments_m_v_index ON enrollments.enrollments_m_v(course_name, employee_id);
+CREATE UNIQUE INDEX courses_m_v_i ON courses.courses_m_v(course_name, employee_id);
 
 
-CREATE OR REPLACE FUNCTION enrollments.update_enrollments_m_v() RETURNS trigger LANGUAGE plpgsql AS
+CREATE OR REPLACE FUNCTION courses.update_courses_m_v() RETURNS trigger LANGUAGE plpgsql AS
 $$
     BEGIN
-        REFRESH MATERIALIZED VIEW CONCURRENTLY enrollments.enrollments_m_v;
+        REFRESH MATERIALIZED VIEW CONCURRENTLY courses.courses_m_v;
         RETURN NULL;
     END
 $$;
 
 
-CREATE TRIGGER update_enrollments_m_v AFTER INSERT OR UPDATE OR DELETE ON enrollments.enrollments
-    FOR EACH STATEMENT EXECUTE PROCEDURE enrollments.update_enrollments_m_v();
-
-
-CREATE OR REPLACE PROCEDURE enrollments.enroll(IN course_id_parameter smallint, IN employee_id_parameter uuid, OUT enrollment_id_parameter bigint) LANGUAGE plpgsql AS
-$$
-    BEGIN
-        INSERT INTO enrollments.enrollments
-        (
-            course_id,
-            employee_id,
-            status
-        )
-        VALUES
-        (
-            course_id_parameter,
-            employee_id_parameter,
-            'Enrolled'
-        )
-        RETURNING id INTO enrollment_id_parameter;
-    END
-$$;
-
-
-CREATE OR REPLACE PROCEDURE enrollments.update_enrollment_status(IN id_parameter_in bigint, IN status_parameter enrollments.statuses, OUT id_parameter_out bigint) LANGUAGE plpgsql AS
-$$
-    BEGIN
-        UPDATE enrollments.enrollments SET status = status_parameter WHERE id = id_parameter_in
-            RETURNING id INTO id_parameter_out;
-    END
-$$;
+CREATE TRIGGER update_courses_m_v AFTER INSERT OR UPDATE OR DELETE ON courses.courses
+    FOR EACH STATEMENT EXECUTE PROCEDURE courses.update_courses_m_v();

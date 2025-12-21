@@ -7,20 +7,9 @@ CREATE SCHEMA IF NOT EXISTS attempts;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA attempts;
 
 
-CREATE TABLE IF NOT EXISTS attempts.categories
-(
-    id         uuid        PRIMARY KEY,
-    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    edited_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    name       text        NOT NULL UNIQUE,
-    CHECK (edited_at >= created_at)
-);
-
-
 CREATE TABLE IF NOT EXISTS attempts.courses
 (
-    id            uuid        PRIMARY KEY,
-    category_id   uuid        NOT NULL REFERENCES attempts.categories(id) ON DELETE CASCADE,
+    id            int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at     timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     name          text        NOT NULL UNIQUE,
@@ -42,8 +31,8 @@ CREATE TABLE IF NOT EXISTS attempts.employees
 
 CREATE TABLE IF NOT EXISTS attempts.quizes
 (
-    id         uuid        PRIMARY KEY,
-    course_id  uuid        NOT NULL REFERENCES attempts.courses(id) ON DELETE CASCADE,
+    id         int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    course_id  int         NOT NULL REFERENCES attempts.courses(id) ON DELETE CASCADE,
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CHECK (edited_at >= created_at)
@@ -52,36 +41,33 @@ CREATE TABLE IF NOT EXISTS attempts.quizes
 
 CREATE TABLE IF NOT EXISTS attempts.questions
 (
-    id         uuid        PRIMARY KEY,
-    content    text        NOT NULL UNIQUE,
+    id         int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    quiz_id    uuid        NOT NULL REFERENCES attempts.quizes(id) ON DELETE CASCADE,
+    quiz_id    int         NOT NULL REFERENCES attempts.quizes(id) ON DELETE CASCADE,
     CHECK (edited_at >= created_at)
 );
 
 
 CREATE TABLE IF NOT EXISTS attempts.answers
 (
-    id          uuid        PRIMARY KEY,
-    content     text        NOT NULL UNIQUE,
-    correct     bool        NOT NULL,
+    id          int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    question_id uuid        NOT NULL REFERENCES attempts.questions(id) ON DELETE CASCADE,
+    is_correct  bool        NOT NULL,
+    question_id int         NOT NULL REFERENCES attempts.questions(id) ON DELETE CASCADE,
     CHECK (edited_at >= created_at)
 );
 
 
 CREATE TABLE IF NOT EXISTS attempts.attempts
 (
-    id          bigint      PRIMARY KEY,
-    content     text        NOT NULL UNIQUE,
-    correct     bool        NOT NULL,
+    id          bigint      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    content     jsonb       NOT NULL,
     created_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     employee_id uuid        NOT NULL REFERENCES attempts.employees(id) ON DELETE CASCADE,
-    question_id uuid        NOT NULL REFERENCES attempts.questions(id) ON DELETE CASCADE,
+    quiz_id     int         NOT NULL REFERENCES attempts.quizes(id) ON DELETE CASCADE,
     CHECK (edited_at >= created_at)
 );
 

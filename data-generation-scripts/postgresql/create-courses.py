@@ -32,7 +32,7 @@ def create_courses_csv() -> None:
     filenames: list[str] = [fake.url(schemes=['https']) for url in range(10000)]
     names: list[str] = [fake.text(max_nb_chars=20) for name in range(10000)]
     with open('/var/tmp/courses.csv', 'wt', encoding='utf-8', newline='') as courses_csv:
-        courses_csv.write('id,category_id,created_at,decription,edited_at,filename,language,length,name' + '\n')
+        courses_csv.write('id,category_id,created_at,description,edited_at,filename,language,length,name' + '\n')
         writer: _csv.writer = csv.writer(courses_csv, dialect='unix', delimiter=',', escapechar='\\', quoting=csv.QUOTE_NONE)
         for record in zip(ids, categories_ids, created_ats, descriptions, edited_ats, filenames, languages_generated, lengths_generated, names):
             writer.writerow(record)

@@ -49,13 +49,23 @@ CREATE TABLE IF NOT EXISTS attempts.questions
 );
 
 
-CREATE TABLE IF NOT EXISTS attempts.answers
+CREATE TABLE IF NOT EXISTS attempts.correct_answers
 (
     id          int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_correct  bool        NOT NULL,
     question_id int         NOT NULL REFERENCES attempts.questions(id) ON DELETE CASCADE,
+    CHECK (edited_at >= created_at)
+);
+
+
+CREATE TABLE IF NOT EXISTS attempts.scores
+(
+    id         bigint      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    edited_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    value      decimal(1, 1) NOT NULL,
     CHECK (edited_at >= created_at)
 );
 
@@ -68,18 +78,7 @@ CREATE TABLE IF NOT EXISTS attempts.attempts
     edited_at   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     employee_id uuid        NOT NULL REFERENCES attempts.employees(id) ON DELETE CASCADE,
     quiz_id     int         NOT NULL REFERENCES attempts.quizes(id) ON DELETE CASCADE,
-    CHECK (edited_at >= created_at)
-);
-
-
-CREATE TABLE IF NOT EXISTS attempts.attempts
-(
-    id          bigint      PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    content     jsonb       NOT NULL,
-    created_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    edited_at   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    employee_id uuid        NOT NULL REFERENCES attempts.employees(id) ON DELETE CASCADE,
-    score       decimal(1, 1)       DEFAULT 0.0,
+    score_id    bigint      NOT NULL REFERENCES attempts.scores(id) ON DELETE CASCADE,
     CHECK (edited_at >= created_at)
 );
 
@@ -100,9 +99,9 @@ $$
     BEGIN
         FOR table_name_variable IN SELECT table_name FROM information_schema.columns WHERE column_name = 'edited_at' LOOP
             EXECUTE format('CREATE TRIGGER update_edited_at
-                                BEFORE UPDATE ON attempts.%I
+                                BEFORE UPDATE ON dream_stream.attempts.%I
                                 FOR EACH ROW
-                                EXECUTE PROCEDURE attempts.update_edited_at()',
+                                EXECUTE PROCEDURE dream_stream.attempts.update_edited_at()',
                            table_name_variable,
                            table_name_variable);
         END loop;
@@ -115,6 +114,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS attempts.attempts_m_v AS
         em.id AS employee_id,
         em.first_name || ' ' || em.last_name AS employee_name,
         co.name AS course_name,
+        sc.value AS score,
         at.created_at AS submitted_at
     FROM
         attempts.attempts AS at
@@ -124,6 +124,9 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS attempts.attempts_m_v AS
     INNER JOIN
         attempts.courses AS co
         ON at.course_id = co.id
+    INNER JOIN
+        attempts.scores AS sc
+        ON at.score_id = sc.id
 WITH DATA;
 
 

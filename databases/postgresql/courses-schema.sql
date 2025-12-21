@@ -42,14 +42,15 @@ CREATE TABLE IF NOT EXISTS courses.employees
 
 CREATE TABLE IF NOT EXISTS courses.authors
 (
-    id uuid NOT NULL REFERENCES courses.employees(id) ON DELETE CASCADE
+    id uuid PRIMARY KEY REFERENCES courses.employees(id) ON DELETE CASCADE
 );
 
 
 CREATE TABLE IF NOT EXISTS courses.authors_courses
 (
-    author_id uuid NOT NULL REFERENCES courses.employees(id) ON DELETE CASCADE,
-    course_id int  NOT NULL REFERENCES courses.courses(id) ON DELETE CASCADE
+    author_id uuid NOT NULL REFERENCES courses.authors(id) ON DELETE CASCADE,
+    course_id int  NOT NULL REFERENCES courses.courses(id) ON DELETE CASCADE,
+    PRIMARY KEY (author_id, course_id)
 );
 
 
@@ -121,13 +122,13 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS courses.courses_m_v AS
         en.created_at AS enrolled_at,
         en.status AS enrollment_status
     FROM
-        courses.courses AS en
-    INNER JOIN
-        courses.employees AS em
-        ON en.employee_id = em.id
-    INNER JOIN
         courses.courses AS co
-        ON en.course_id = co.id
+    INNER JOIN
+        courses.categories AS ca
+        ON co.category_id = ca.id
+    INNER JOIN
+        courses.authors_courses AS au_co
+        ON co.course_id = co.id
 WITH DATA;
 
 

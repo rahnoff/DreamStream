@@ -7,27 +7,6 @@ CREATE SCHEMA IF NOT EXISTS courses;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA courses;
 
 
-CREATE TABLE IF NOT EXISTS courses.categories
-(
-    id         smallint    GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    edited_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    name       text        NOT NULL UNIQUE,
-    CHECK (edited_at >= created_at)
-);
-
-
-CREATE TABLE IF NOT EXISTS courses.courses
-(
-    id            int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    category_id   smallint    NOT NULL REFERENCES courses.categories(id) ON DELETE CASCADE,
-    created_at    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    edited_at     timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    name          text        NOT NULL UNIQUE,
-    CHECK (edited_at >= created_at)
-);
-
-
 CREATE TABLE IF NOT EXISTS courses.employees
 (
     id         uuid        PRIMARY KEY,
@@ -43,6 +22,31 @@ CREATE TABLE IF NOT EXISTS courses.employees
 CREATE TABLE IF NOT EXISTS courses.authors
 (
     id uuid PRIMARY KEY REFERENCES courses.employees(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE IF NOT EXISTS courses.categories
+(
+    id         smallint    GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    edited_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    name       text        NOT NULL UNIQUE,
+    CHECK (edited_at >= created_at)
+);
+
+
+CREATE TABLE IF NOT EXISTS courses.courses
+(
+    id          int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    category_id smallint    NOT NULL REFERENCES courses.categories(id) ON DELETE CASCADE,
+    created_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    description text        NOT NULL,
+    edited_at   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    filename    text        NOT NULL UNIQUE,
+    language    text        NOT NULL,
+    length      text        NOT NULL,
+    name        text        NOT NULL UNIQUE,
+    CHECK (edited_at >= created_at)
 );
 
 
@@ -114,35 +118,26 @@ $$
 $$;
 
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS courses.courses_m_v AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS courses.categories_m_v AS
     SELECT
-        em.id AS employee_id,
-        em.first_name || ' ' || em.last_name AS employee_name,
-        co.name AS course_name,
-        en.created_at AS enrolled_at,
-        en.status AS enrollment_status
+        ca.id,
+        ca.name
     FROM
-        courses.courses AS co
-    INNER JOIN
         courses.categories AS ca
-        ON co.category_id = ca.id
-    INNER JOIN
-        courses.authors_courses AS au_co
-        ON co.course_id = co.id
 WITH DATA;
 
 
-CREATE UNIQUE INDEX courses_m_v_i ON courses.courses_m_v(course_name, employee_id);
+CREATE UNIQUE INDEX categories_m_v_i ON courses.categories_m_v(id, name);
 
 
-CREATE OR REPLACE FUNCTION courses.update_courses_m_v() RETURNS trigger LANGUAGE plpgsql AS
+CREATE OR REPLACE FUNCTION courses.update_categories_m_v() RETURNS trigger LANGUAGE plpgsql AS
 $$
     BEGIN
-        REFRESH MATERIALIZED VIEW CONCURRENTLY courses.courses_m_v;
+        REFRESH MATERIALIZED VIEW CONCURRENTLY courses.categories_m_v;
         RETURN NULL;
     END
 $$;
 
 
-CREATE TRIGGER update_courses_m_v AFTER INSERT OR UPDATE OR DELETE ON courses.courses
-    FOR EACH STATEMENT EXECUTE PROCEDURE courses.update_courses_m_v();
+CREATE TRIGGER update_categories_m_v AFTER INSERT OR UPDATE OR DELETE ON courses.categories
+    FOR EACH STATEMENT EXECUTE PROCEDURE courses.update_categories_m_v();

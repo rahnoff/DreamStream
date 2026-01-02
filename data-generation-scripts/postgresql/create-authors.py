@@ -12,7 +12,7 @@ def read_employees_ids() -> list[str]:
 
 def create_authors_csv() -> None:
     employees_ids: list[str] = read_employees_ids()
-    ids: list[str] = [random.choice(employees_ids) for id in range(1000)]
+    ids: list[str] = random.sample(employees_ids, 10000)
     with open('/var/tmp/authors.csv', 'wt', encoding='utf-8', newline='') as authors_csv:
         authors_csv.write('id' + '\n')
         writer: _csv.writer = csv.writer(authors_csv, dialect='unix', delimiter=',', escapechar='\\', quoting=csv.QUOTE_NONE)

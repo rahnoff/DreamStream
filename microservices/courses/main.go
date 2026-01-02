@@ -1,321 +1,184 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
+	"log"
 	"net/http"
-	"strings"
+	"os"
+	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/gocql/gocql"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type CategoryOutGetRequest struct {
+	CategoryID       int8 `json:"id"`
+	CategoryName     string    `json:"name"`
+}
 
-const (
-	GetVideoByIdQuery string = "SELECT id, description, storage_link, title FROM video WHERE id = ?"
+type EnrollmentInPostRequest struct {
+	CourseID   int16 `json:"course_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
+}
 
-	CreateVideoQuery  string = "INSERT INTO video (id, description, storage_link, title) VALUES (?, ?, ?, ?)"
-)
+type EnrollmentOutGeneric struct {
+	EnrollmentID int64 `json:"id"`
+}
 
+type CourseByCategoryIDOutGetRequest struct {
+	CourseID     int64 `json:"id"`
+	CourseDescription string    `json:"description"`
+	CourseID         int16 `json:"course_id"`
+	CreatedAt        time.Time `json:"created_at"`
+	EnrollmentStatus string    `json:"status"`
+}
 
-var (
-	session *gocql.Session
+type EnrollmentInPutRequest struct {
+	EnrollmentStatus string `json:"status"`
+}
 
-	router = gin.Default()
-)
+type CoursesMicroservice struct {
+	PostgresqlPool *pgxpool.Pool
+	Router         *mux.Router
+}
 
-
-type (
-	RestErr struct {
-		ErrMessage string        `json:"message"`
-	
-		ErrStatus  int           `json:"status"`
-	
-		ErrError   string        `json:"error"`
-		
-		ErrCauses  []interface{} `json:"causes"`
+func (cm *CoursesMicroservice) Initialize() {
+	postgresqlURL := os.Getenv("POSTGRESQL_URL")
+	if (postgresqlURL == "") {
+		postgresqlURL = "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
 	}
-
-	DbRepository interface {
-		GetByID(videoID string) (*Video, *RestErr)
-	
-		Create(video Video) (*Video, *RestErr)
+	postgresqlPool, postgresqlPoolCreationError := pgxpool.New(context.Background(), postgresqlURL)
+	if (postgresqlPoolCreationError != nil) {
+		log.Fatal("Unable to create a PostgreSQL connection pool:\n", postgresqlPoolCreationError.Error())
 	}
-
-	dbRepository struct {}
-
-	Video struct {
-		ID           string `json:"id"`
-	
-		Description  string `json:"description"`
-	
-		StorageLink  string `json:"storage_link"`
-	
-		Title        string `json:"title"`
+	postgresqlPoolPingError := postgresqlPool.Ping(context.Background())
+	if (postgresqlPoolPingError != nil) {
+		log.Fatal("Unable to ping a PostgreSQL server:\n", postgresqlPoolPingError.Error())
 	}
+	log.Println("Connected to a PostgreSQL server")
+	cm.PostgresqlPool = postgresqlPool
+	cm.Router = mux.NewRouter()
+	cm.initializeRoutes()
+}
 
-	VideoRepository interface {
-		GetByID(videoID string) (*Video, *RestErr)
-	
-		Create(video Video) (*Video, *RestErr)
-	}
+func (cm *CoursesMicroservice) initializeRoutes() {
+	cm.Router.HandleFunc("/categories", cm.getCategories).Methods("GET")
+	cm.Router.HandleFunc("/courses/{category_id}", cm.getCoursesByCategoryID).Methods("GET")
+	cm.Router.HandleFunc("/quizes/course_id", cm.getQuizesByCourseID).Methods("GET")
+	cm.Router.HandleFunc("/questions/{quiz_id}", cm.getQuestionsByQuizID).Methods("GET")
+	cm.Router.HandleFunc("/answers/{question_id}", cm.getAnswersByQuestionID).Methods("GET")
+}
 
-	VideoService interface {
-		GetByID(videoID string) (*Video, *RestErr)
-	
-		Create(video Video) (*Video, *RestErr)
+func (cm *CoursesMicroservice) getCategories(responseWriter http.ResponseWriter, request *http.Request) {
+	categories, categoriesSelectError := cm.PostgresqlPool.Query(context.Background(), "SELECT id, name FROM courses.categories_m_v;")
+	if (categoriesSelectError != nil) {
+		respondWithError(responseWriter, http.StatusInternalServerError, "Unable to retrieve categories")
+		return
 	}
+	defer categories.Close()
+	var categoriesOutsGetRequest []CategoryOutGetRequest
+	for (categories.Next()) {
+		var categoryOutGetRequest CategoryOutGetRequest
+		categoriesScanError := categories.Scan(&categoryOutGetRequest.CategoryID, &categoryOutGetRequest.CategoryName)
+		if (categoriesScanError != nil) {
+			respondWithError(responseWriter, http.StatusInternalServerError, "Unable to scan categories")
+			return
+		}
+		categoriesOutsGetRequest = append(categoriesOutsGetRequest, categoryOutGetRequest)
+	}
+	respondWithJSON(responseWriter, http.StatusOK, categoriesOutsGetRequest)
+}
 
-	videoService struct {
-		repository VideoRepository
+func (cm *CoursesMicroservice) getCoursesByCategoryID(responseWriter http.ResponseWriter, request *http.Request) {
+	variables := mux.Vars(request)
+	coursesByCategoryID, coursesByCategoryIDSelectError := cm.PostgresqlPool.Query(context.Background(), "SELECT id, description, filename, language, length, name FROM courses.courses WHERE category_id = $1;", variables["category_id"])
+	if (coursesByCategoryIDSelectError != nil) {
+		respondWithError(responseWriter, http.StatusInternalServerError, "Unable to retrieve courses by a category ID")
+		return
 	}
+	defer coursesByCategoryID.Close()
+	var coursesByCategoryIDOutsGetRequest []EnrollmentByEmployeeIDOutGetRequest
+	for (enrollmentsByEmployeeID.Next()) {
+		var EnrollmentByEmployeeIDOutGetRequest EnrollmentByEmployeeIDOutGetRequest
+		enrollmentsByEmployeeIDScanError := enrollmentsByEmployeeID.Scan(&EnrollmentByEmployeeIDOutGetRequest.EnrollmentID, &EnrollmentByEmployeeIDOutGetRequest.CourseID, &EnrollmentByEmployeeIDOutGetRequest.CreatedAt, &EnrollmentByEmployeeIDOutGetRequest.EnrollmentStatus)
+		if (enrollmentsByEmployeeIDScanError != nil) {
+			respondWithError(responseWriter, http.StatusInternalServerError, "Unable to scan enrollments by an employee ID")
+			return
+		}
+		enrollmentsByEmployeeIDOutsGetRequest = append(enrollmentsByEmployeeIDOutsGetRequest, EnrollmentByEmployeeIDOutGetRequest)
+	}
+	respondWithJSON(responseWriter, http.StatusOK, enrollmentsByEmployeeIDOutsGetRequest)
+}
 
-	VideoHandler interface {
-		GetById(ctx *gin.Context)
-	
-		Create(ctx *gin.Context)
+func (em *EnrollmentsMicroservice) createEnrollment(responseWriter http.ResponseWriter, request *http.Request) {
+	var (
+		enrollmentInPostRequest EnrollmentInPostRequest
+		enrollmentOutGeneric    EnrollmentOutGeneric
+	)
+	decoder := json.NewDecoder(request.Body)
+	decodeRequestBodyToEnrollmentInPostRequestError := decoder.Decode(&enrollmentInPostRequest)
+	if (decodeRequestBodyToEnrollmentInPostRequestError != nil) {
+		log.Println("Unable to decode a request body into enrollmentInPostRequest:\n", decodeRequestBodyToEnrollmentInPostRequestError.Error())
+		respondWithError(responseWriter, http.StatusBadRequest, "Invalid request payload")
+		return
 	}
-	
-	videoHandler struct {
-		videoService VideoService
+	defer request.Body.Close()
+	enrollError := em.PostgresqlPool.QueryRow(context.Background(), "CALL enrollments.enroll($1, $2, NULL)", enrollmentInPostRequest.CourseID, enrollmentInPostRequest.EmployeeID).Scan(&enrollmentOutGeneric.EnrollmentID)
+	if (enrollError != nil) {
+		log.Println("Unable to enroll:\n", enrollError.Error())
+		respondWithError(responseWriter, http.StatusInternalServerError, "Unable to create an enrollment")
+		return
 	}
-)
+	respondWithJSON(responseWriter, http.StatusCreated, enrollmentOutGeneric)
+}
 
+func (em *EnrollmentsMicroservice) updateEnrollment(responseWriter http.ResponseWriter, request *http.Request) {
+	variables := mux.Vars(request)
+	var (
+		enrollmentInPutRequest EnrollmentInPutRequest
+		enrollmentOutGeneric   EnrollmentOutGeneric
+	)
+	decoder := json.NewDecoder(request.Body)
+	decodeRequestBodyToEnrollmentInPutRequestError := decoder.Decode(&enrollmentInPutRequest)
+	if (decodeRequestBodyToEnrollmentInPutRequestError != nil) {
+		log.Println("Unable to decode a request body into enrollmentInPutRequest:\n", decodeRequestBodyToEnrollmentInPutRequestError.Error())
+		respondWithError(responseWriter, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	defer request.Body.Close()
+	updateEnrollmentError := em.PostgresqlPool.QueryRow(context.Background(), "CALL enrollments.update_enrollment_status($1, $2, NULL)", variables["id"], enrollmentInPutRequest.EnrollmentStatus).Scan(&enrollmentOutGeneric.EnrollmentID)
+	if (updateEnrollmentError != nil) {
+		log.Println("Unable to update an enrollment status:\n", updateEnrollmentError.Error())
+		respondWithError(responseWriter, http.StatusInternalServerError, "Unable to update an enrollment")
+		return
+	}
+	respondWithJSON(responseWriter, http.StatusNoContent, enrollmentOutGeneric)
+}
+
+func respondWithJSON(responseWriter http.ResponseWriter, code int, payload interface{}) {
+	response, _ := json.Marshal(payload)
+	responseWriter.Header().Set("Content-Type", "application/json")
+	responseWriter.WriteHeader(code)
+	responseWriter.Write(response)
+}
+
+func respondWithError(responseWriter http.ResponseWriter, code int, message string) {
+	respondWithJSON(responseWriter, code, map[string]string{"error": message})
+}
+
+func (em *EnrollmentsMicroservice) Run() {
+	enrollmentsURL := os.Getenv("ENROLLMENTS_URL")
+	if (enrollmentsURL == "") {
+		enrollmentsURL = "127.0.0.1:2000"
+	}
+	log.Printf("Server started on %s", enrollmentsURL)
+	log.Fatal(http.ListenAndServe(enrollmentsURL, em.Router))
+}
 
 func main() {
-	Run()
-}
-
-
-func NewRestError(message string, status int, err string, causes []interface{}) *RestErr {
-	return &RestErr{
-		ErrMessage: message,
-
-		ErrStatus:  status,
-
-		ErrError:   err,
-
-		ErrCauses:  causes,
-	}
-}
-
-
-func NewRestErrorFromBytes(bytes []byte) (*RestErr, error) {
-	var apiErr RestErr
-	
-	err := json.Unmarshal(bytes, &apiErr)
-	
-	if (err != nil) {
-		return nil, errors.New("Invalid JSON")
-	}
-	
-	return &apiErr, nil
-}
-
-
-func NewBadRequestError(message string) *RestErr {
-	return &RestErr{
-		ErrMessage: message,
-
-		ErrStatus:  http.StatusBadRequest,
-
-		ErrError:   "bad_request",
-	}
-}
-
-
-func NewNotFoundError(message string) *RestErr {
-	return &RestErr{
-		ErrMessage: message,
-
-		ErrStatus:  http.StatusNotFound,
-
-		ErrError:   "not_found",
-	}
-}
-
-
-func NewUnauthorizedError(message string) *RestErr {
-	return &RestErr{
-		ErrMessage: message,
-
-		ErrStatus:  http.StatusUnauthorized,
-
-		ErrError:   "unauthorized",
-	}
-}
-
-
-func NewInternalServerError(message string, err error) *RestErr {
-	result := &RestErr{
-		ErrMessage: message,
-
-		ErrStatus:  http.StatusInternalServerError,
-
-		ErrError:   "internal_server_error",
-	}
-	
-	if (err != nil) {
-		result.ErrCauses = append(result.ErrCauses, err.Error())
-	}
-	
-	return result
-}
-
-
-func NewDbRepository() DbRepository {
-	return &dbRepository{}
-}
-
-
-func (repo *dbRepository) Create(video Video) (*Video, *RestErr) {
-	err := GetSession().Query(CreateVideoQuery, video.ID, video.Description, video.StorageLink, video.Title).Exec()
-
-	if (err != nil) {
-		return nil, NewInternalServerError("Unable to insert video's metadata to Cassandra", errors.New(err.Error()))
-	}
-
-	return &video, nil
-}
-
-
-func (repo *dbRepository) GetByID(videoID string) (*Video, *RestErr) {
-	var video Video
-
-	err := GetSession().Query(GetVideoByIdQuery, videoID).Scan(&video.ID, &video.Description, &video.StorageLink, &video.Title)
-	
-	if (err != nil) {
-		if (err.Error() == "Not found") {
-			fmt.Println("Here")
-
-			return nil, NewInternalServerError("No video for given video ID", errors.New(err.Error()))
-		}
-
-		return nil, NewInternalServerError("Unable to find video in Cassandra", errors.New(err.Error()))
-	}
-
-	return &video, nil
-}
-
-
-func (video *Video) ValidateVideo() *RestErr {
-	if (video.Title == "") {
-		return NewInternalServerError("Title can't be blank", nil)
-	}
-
-	return nil
-}
-
-
-func (s *videoService) Create(video Video) (*Video, *RestErr) {
-	err := video.ValidateVideo()
-
-	if (err != nil) {
-		return nil, err
-	}
-
-	return s.repository.Create(video)
-}
-
-
-func NewService(repository VideoRepository) VideoService {
-	return &videoService{repository: repository}
-}
-
-
-func (s *videoService) GetByID(videoID string) (*Video, *RestErr) {
-	videoID = strings.TrimSpace(videoID)
-
-	if (len(videoID) == 0) {
-		return nil, NewBadRequestError("Invalid video ID, it can't be blank")
-	}
-
-	video, err := s.repository.GetByID(videoID)
-
-	if (err != nil) {
-		videoNotFoundErr := fmt.Sprintf("Video not found for video ID %s", videoID)
-
-		return nil, NewInternalServerError(videoNotFoundErr, errors.New("Here"))
-	}
-
-	return video, nil
-}
-
-
-func connectToCassandra() {
-	cluster := gocql.NewCluster("127.0.0.1")
-
-	cluster.Keyspace = "dream-stream"
-
-	cluster.Consistency = gocql.Quorum
-
-	var err error
-
-	session, err = cluster.CreateSession()
-
-	if (err != nil) {
-		panic(err)
-	}
-}
-
-
-func GetSession() *gocql.Session {
-	return session
-}
-
-
-func Run()  {
-	videoHandler := NewHandler(NewService(NewDbRepository()))
-
-	router.GET("/video/:id", videoHandler.GetById)
-
-	router.POST("/video", videoHandler.Create)
-
-	_ = router.Run(":8888")
-}
-
-
-func (videoHandler videoHandler) GetById(ctx *gin.Context) {
-	videoID := strings.TrimSpace(ctx.Param("id"))
-
-	video, err := videoHandler.videoService.GetByID(videoID)
-
-	if (err != nil) {
-		ctx.JSON(err.ErrStatus, err)
-
-		return
-	}
-
-	ctx.JSON(http.StatusOK, video)
-}
-
-
-func NewHandler(videoService VideoService) VideoHandler {
-	return &videoHandler{
-		videoService: videoService,
-	}
-}
-
-
-func (videoHandler *videoHandler) Create(ctx *gin.Context)  {
-	var video Video
-
-	err := ctx.ShouldBindJSON(&video)
-
-	if (err != nil) {
-		restErr := NewBadRequestError("Invalid JSON body")
-
-		ctx.JSON(restErr.ErrStatus, restErr)
-	}
-
-	_, videoErr := videoHandler.videoService.Create(video)
-
-	if (videoErr != nil) {
-		ctx.JSON(videoErr.ErrStatus, videoErr)
-
-		return
-	}
-
-	ctx.JSON(http.StatusCreated, video)
+	enrollmentsMicroservice := EnrollmentsMicroservice{}
+	enrollmentsMicroservice.Initialize()
+	enrollmentsMicroservice.Run()
 }

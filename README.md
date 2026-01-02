@@ -11,3 +11,8 @@ E-Learning platform, based on microservices
 `ENROLLMENTS_URL="127.0.0.1:2000" POSTGRESQL_URL="postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable" go run enrollments.go`
 
 `ENROLLMENTS_PORT=3000 ENROLLMENTS_SERVER=linux-mint python3 customer-emulator.py`
+
+
+# Place quotes to avoid parsing error
+
+`awk -F , 'BEGIN{OFS=FS} {$4="\""$4"\""; print}' ./courses.csv.orig 1> test.csv`

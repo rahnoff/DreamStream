@@ -9,7 +9,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA enrollments;
 
 CREATE TABLE IF NOT EXISTS enrollments.courses
 (
-    id            int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id            bigint         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at     timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     name          text        NOT NULL UNIQUE,
@@ -41,7 +41,7 @@ CREATE TYPE enrollments.statuses AS ENUM
 CREATE TABLE IF NOT EXISTS enrollments.enrollments
 (
     id          bigint               GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    course_id   int                  NOT NULL REFERENCES enrollments.courses(id) ON DELETE CASCADE,
+    course_id   bigint                  NOT NULL REFERENCES enrollments.courses(id) ON DELETE CASCADE,
     created_at  timestamptz          NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at   timestamptz          NOT NULL DEFAULT CURRENT_TIMESTAMP,
     employee_id uuid                 NOT NULL REFERENCES enrollments.employees(id) ON DELETE CASCADE,
@@ -111,7 +111,7 @@ CREATE TRIGGER update_enrollments_m_v AFTER INSERT OR UPDATE OR DELETE ON enroll
     FOR EACH STATEMENT EXECUTE PROCEDURE enrollments.update_enrollments_m_v();
 
 
-CREATE OR REPLACE PROCEDURE enrollments.enroll(IN course_id_parameter smallint, IN employee_id_parameter uuid, OUT enrollment_id_parameter bigint) LANGUAGE plpgsql AS
+CREATE OR REPLACE PROCEDURE enrollments.enroll(IN course_id_parameter bigint, IN employee_id_parameter uuid, OUT enrollment_id_parameter bigint) LANGUAGE plpgsql AS
 $$
     BEGIN
         INSERT INTO enrollments.enrollments

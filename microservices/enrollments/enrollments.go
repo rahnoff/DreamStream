@@ -22,7 +22,8 @@ type EnrollmentOutGetRequest struct {
 }
 
 type EnrollmentInPostRequest struct {
-	CourseID   int16 `json:"course_id"`
+	// CourseID   int16 `json:"course_id"`
+	CourseID   int64 `json:"course_id"`
 	EmployeeID uuid.UUID `json:"employee_id"`
 }
 

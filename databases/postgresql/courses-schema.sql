@@ -106,11 +106,11 @@ $$
     DECLARE
         table_name_variable text;
     BEGIN
-        FOR table_name_variable IN SELECT table_name FROM information_schema.columns WHERE column_name = 'edited_at' LOOP
+        FOR table_name_variable IN SELECT table_name FROM information_schema.columns WHERE table_catalog = 'dream_stream' AND table_schema = 'courses' AND column_name = 'edited_at' ORDER BY table_name ASC LOOP
             EXECUTE format('CREATE TRIGGER update_edited_at
-                                BEFORE UPDATE ON courses.%I
+                                BEFORE UPDATE ON enrollments.%I
                                 FOR EACH ROW
-                                EXECUTE PROCEDURE courses.update_edited_at()',
+                                EXECUTE PROCEDURE enrollments.update_edited_at()',
                            table_name_variable,
                            table_name_variable);
         END loop;

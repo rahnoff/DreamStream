@@ -11,6 +11,7 @@ import (
 	"os"
 	"encoding/csv"
 	"bytes"
+	// "github.com/google/uuid"
 )
 
 type Category struct {
@@ -30,6 +31,14 @@ type Course struct {
 type Enrollment struct {
 	CourseID int64 `json:"course_id"`
 	EmployeeID string `json:"employee_id"`
+}
+
+type EnrollmentCreated struct {
+	EnrollmentCreatedID int64 `json:"id"`
+}
+
+type EnrollmentUpdated struct {
+	EnrollmentCreatedID int64 `json:"id"`
 }
 
 func main() {
@@ -63,7 +72,7 @@ func main() {
 		rand.Seed(time.Now().UnixNano())
 	    employeeIndex := rand.Intn(len(firstColumn))
 	    selectedEmployeeID := firstColumn[employeeIndex]
-		fmt.Println(selectedEmployeeID)
+		// fmt.Println(selectedEmployeeID)
 		resp, categoriesReadError := http.Get("http://127.0.0.1:2002/categories")
 		if categoriesReadError != nil {
 			log.Fatal("HTTP request failed:", categoriesReadError)
@@ -86,7 +95,7 @@ func main() {
 		rand.Seed(time.Now().UnixNano())
 		index := rand.Intn(len(categoriesIDs))
 		selectedCategoryID := categoriesIDs[index]
-		fmt.Println(selectedCategoryID)
+		// fmt.Println(selectedCategoryID)
 		coursesURL := fmt.Sprintf("http://127.0.0.1:2002/courses/%d", selectedCategoryID)
 		// fmt.Println(coursesURL)
 		resp_1, coursesReadError := http.Get(coursesURL)
@@ -113,18 +122,20 @@ func main() {
 		rand.Seed(time.Now().UnixNano())
 		index_1 := rand.Intn(len(coursesIDs))
 		selectedCourseID := coursesIDs[index_1]
-		fmt.Println(selectedCourseID)
+		// fmt.Println(selectedCourseID)
 
 		enrollment := Enrollment{
 			CourseID: selectedCourseID,
 			EmployeeID: selectedEmployeeID,
 		}
+		// fmt.Println(enrollment)
 	
 		// Marshal struct to JSON
 		jsonData, err := json.Marshal(enrollment)
 		if err != nil {
 			log.Fatal("JSON marshaling failed:", err)
 		}
+		// fmt.Println(jsonData)
 	
 		// Create request body reader
 		body_2 := bytes.NewBuffer(jsonData)
@@ -132,13 +143,45 @@ func main() {
 	if err != nil {
 		log.Fatal("Request failed:", err)
 	}
-	defer resp_2.Body.Close()
+	if resp_2.StatusCode == http.StatusCreated {
+        var enrollmentCreated EnrollmentCreated
+        json.NewDecoder(resp_2.Body).Decode(&enrollmentCreated)
+        // fmt.Printf("Created: %+v\n", enrollmentCreated)
+		enrollmentUpdated := EnrollmentUpdated{
+			EnrollmentCreatedID: enrollmentCreated.EnrollmentCreatedID,
+		}
+		// fmt.Println(enrollment)
+	
+		// Marshal struct to JSON
+		jsonData_1, err := json.Marshal(enrollmentUpdated)
+		if err != nil {
+			log.Fatal("JSON marshaling failed:", err)
+		}
+		// fmt.Println(jsonData)
+	
+		// Create request body reader
+		body_3 := bytes.NewBuffer(jsonData_1)
+		resp_3, err := http.Put("http://127.0.0.1:2003/enrollments", "application/json", body_3)
+	if err != nil {
+		log.Fatal("Request failed:", err)
+	}
+	if resp_2.StatusCode == http.StatusCreated {
+        var enrollmentCreated EnrollmentCreated
+        json.NewDecoder(resp_2.Body).Decode(&enrollmentCreated)
+        fmt.Printf("Created: %+v\n", enrollmentCreated)
+    } else {
+        fmt.Printf("Unexpected status: %s\n", resp.Status)
+    }
+    } else {
+        fmt.Printf("Unexpected status: %s\n", resp.Status)
+    }
+	// defer resp_2.Body.Close()
 
-    var res map[string]interface{}
+    // var res map[string]interface{}
 
-    json.NewDecoder(resp.Body).Decode(&res)
+    // json.NewDecoder(resp.Body).Decode(&res)
 
-    fmt.Println(res["json"])
+    // fmt.Println(res["json"])
 	// defer resp_2.Body.Close()
 
 	// Read and print response

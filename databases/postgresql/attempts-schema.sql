@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS attempts.correct_answers
     id          int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at  timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_correct  bool        NOT NULL,
+    -- is_correct  bool        NOT NULL,
     question_id int         NOT NULL REFERENCES attempts.questions(id) ON DELETE CASCADE,
     CHECK (edited_at >= created_at)
 );

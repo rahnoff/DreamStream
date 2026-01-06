@@ -9,7 +9,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA enrollments;
 
 CREATE TABLE IF NOT EXISTS enrollments.courses
 (
-    id            bigint         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id            int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at     timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     name          text        NOT NULL UNIQUE,

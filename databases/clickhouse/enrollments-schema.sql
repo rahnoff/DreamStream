@@ -3,7 +3,7 @@ CREATE DATABASE IF NOT EXISTS dream_stream ON CLUSTER default ENGINE = Atomic;
 
 CREATE TABLE IF NOT EXISTS dream_stream.enrollments_local ON CLUSTER default
 (
-    completed_at         DateTime64(9) CODEC(DoubleDelta, ZSTD(1))
+    completed_at         DateTime64(9) CODEC(DoubleDelta, ZSTD(1)),
     course_name          LowCardinality(String),
     course_category      LowCardinality(String),
     employee_name        LowCardinality(String),

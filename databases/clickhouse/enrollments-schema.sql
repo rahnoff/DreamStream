@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS dream_stream ON CLUSTER default ENGINE = Atomic;
 
 
-CREATE TABLE IF NOT EXISTS dream_stream.enrollments_local ON CLUSTER default
+CREATE TABLE IF NOT EXISTS dream_stream.enrollments_l ON CLUSTER default
 (
     completed_at         DateTime64(3) CODEC(DoubleDelta, ZSTD(1)),
     course_name          LowCardinality(String),
@@ -19,4 +19,4 @@ ORDER BY (status, ingested_at)
 SETTINGS index_granularity = 8192;
 
 
-CREATE TABLE IF NOT EXISTS dream_stream.enrollments_distributed ON CLUSTER default AS dream_stream.enrollments_local ENGINE = Distributed('default', 'dream_stream', 'enrollments_local', rand());
+CREATE TABLE IF NOT EXISTS dream_stream.enrollments_d ON CLUSTER default AS dream_stream.enrollments_l ENGINE = Distributed('default', 'dream_stream', 'enrollments_l', rand());
